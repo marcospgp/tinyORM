@@ -1,6 +1,6 @@
 # tinyORM
 
-A minimal storage layer extremely optimized toward development speed.
+A minimal storage layer radically optimized toward development speed.
 
 ## What is TinyORM?
 
