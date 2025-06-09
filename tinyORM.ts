@@ -17,16 +17,25 @@ type MigrationTuple<Ts extends BaseModel[]> = Ts extends [
   ? [(from: From) => To, ...MigrationTuple<[To, ...Rest]>]
   : [];
 
-export function createModel<T extends BaseModel, Versions extends BaseModel[]>(
-  getId: (obj: T) => string,
+// Get the last type in a list of types.
+type Last<T extends any[]> = T extends [...infer _, infer L] ? L : never;
+
+/**
+ * "Versions" represents all the historical types for the model, up to latest.
+ * "Last<Versions>" represents the latest type for the model.
+ * "MigrationTuple<Versions>" is a list of migration functions that convert between each successive
+ * type.
+ */
+export function createModel<Versions extends BaseModel[]>(
+  getId: (obj: Last<Versions>) => string,
   methods: Record<string, (...args: any[]) => any>,
   migrations: MigrationTuple<Versions>,
   storageEngine: (
-    getId: (obj: T) => string,
-    migrate: (prev: BaseModel) => T
+    getId: (obj: Last<Versions>) => string,
+    migrate: (prev: BaseModel) => Last<Versions>
   ) => Record<string, (...args: any[]) => any>
 ) {
-  function migrate(prev: BaseModel): T {
+  function migrate(prev: BaseModel): Last<Versions> {
     let cur = { ...prev };
     // Apply migrations.
     for (let i = cur.version; i < migrations.length + 1; i++) {
@@ -40,7 +49,7 @@ export function createModel<T extends BaseModel, Versions extends BaseModel[]>(
 
       cur = migration(cur);
     }
-    return cur as T;
+    return cur as Last<Versions>;
   }
 
   return {

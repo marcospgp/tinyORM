@@ -1,8 +1,13 @@
 {
   "name": "@hesoyam.zip/tiny-orm",
-  "version": "0.1.0",
-  "publishConfig": {
-    "access": "public"
+  "version": "0.1.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build index.ts --outdir dist"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",
