@@ -4,85 +4,110 @@ A minimal storage layer radically optimized toward development speed.
 
 ## Install
 
-TODO
+```shell
+npm i @hesoyam.zip/tiny-orm
+```
+
+```shell
+bun add @hesoyam.zip/tiny-orm
+```
+
+```shell
+pnpm add @hesoyam.zip/tiny-orm
+```
 
 ## What is TinyORM?
 
 You're a builder who wants to ship instead of designing the perfect database schema before you get your first user. TinyORM is for you!
 
-You just define a data type and specify how you want to store it:
+You just specify a data type and how you want to store it:
 
 ```typescript
-import { createModel, localStorageEngine } from "@hesoyam.zip/tiny-orm";
+import {
+  BaseModel,
+  createModel,
+  localStorageEngine,
+} from "@hesoyam.zip/tiny-orm";
 
-type User = {
-  // "version" is the only field required by TinyORM.
-  // It makes it possible to run migrations on older data.
-  version: number;
+type User = BaseModel & {
   username: string;
 };
 
 const userModel = createModel<[User]>(
-  // You just have to show TinyORM how to get a unique ID out of your data type.
-  (user) => user.username,
-  // And to specify where you want data to be stored.
-  localStorageEngine
+  (user) => user.username, // Show how to get a unique ID out of your type.
+  localStorageEngine // Store data in the browser's localStorage.
 );
 
-// You can then create objects at will.
+// You then simply create objects of your type as usual:
 const myUser: User = {
   version: userModel.version,
   username: "myUser",
 };
 
-// Persist them.
+// Use the model to persist them:
 userModel.save(myUser);
 
-// And retrieve them at any time.
+// And retrieve them at any time:
 const myUser = userModel.get("myUser");
 ```
 
-```typescript
-import { createModel, localStorageEngine } from "@hesoyam.zip/tiny-orm";
+Note that the data itself is not part of the model - you create plain objects separately and pass them in to your model's methods as required.
 
-type User = {
-  // "version" is the only field required by TinyORM.
-  // It makes it possible to run migrations on older data.
-  version: number;
+This makes tinyORM integrate seamlessly with libraries like React, where storing state requires plain objects.
+
+### Migrations
+
+You may have noticed we used a `BaseModel` type to base our own model on. All that this base type adds is a `version: number` field.
+
+Versioning your data types allows you to change them at any time without breaking production - you just have to tell TinyORM how to migrate existing data from the previous version to the new one.
+
+Let's add a role field to our user, which we want to default to "member":
+
+```typescript
+import {
+  BaseModel,
+  createModel,
+  localStorageEngine,
+} from "@hesoyam.zip/tiny-orm";
+
+// We keep our previous type around so we can type our migration function properly.
+type UserV1 = BaseModel & {
   username: string;
 };
 
+type UserV2 = UserV1 & {
+  username: string;
+  role: "member" | "admin";
+};
+
+type User = UserV2;
+
 const userModel = createModel<[User]>(
-  // The first parameter is just showing how to get a unique ID out of your data type.
   (user) => user.username,
-  // In the second parameter you can specify any utility methods you'd like to be appended to your model.
-  // These can be anything.
-  {
-    capitalizeUsername(user: User) {
-      return user.username.toUpperCase();
-    },
-  },
-  // The third parameter is a list of migrations. These are just functions that update your objects
-  // from one version of your schema to the next, which you provide whenever you update your schema.
-  // They are applied automatically when retrieving data, so you don't have to worry about running them separately.
+  localStorageEngine,
+  // We now specify our first migration to createModel().
   [
-    (prev) => ({
+    (prev: UserV1): UserV2 => ({
       ...prev,
-      history: [],
+      role: "member",
     }),
-  ],
-  // The fourth and final parameter is the storage engine.
-  // Storage engines are just a bunch of methods that get appended to your model. Most commonly you'll have ones like `get()` and `save()`, but they can be anything.
-  localStorageEngine
+  ]
 );
+
+const admin: User = {
+  version: userModel.version, // userModel.version will now be 2.
+  username: "administrator",
+  role: "admin",
+};
 ```
 
-Note that the data itself is not part of the model - you create plain objects separately and pass them in to your model's methods as required.
-This makes tinyORM integrate seamlessly with libraries like React, where storing state requires plain objects.
+Now whenever you retrieve a v1 user, TinyORM will automatically apply your migration to bring them up to v2.
+
+Migrations are always applied at data retrieval time, so there are no world-stopping migrations written in database-specific dialects. Everything happens in your app code.
 
 ### Storage engines
 
-TinyORM ships with a `localStorage` and a postgreSQL storage engine, but you can build a custom one, even just by mixing together existing ones. To define a custom storage engine, you just need a function that takes in two arguments:
+TinyORM ships with a `localStorage` and a postgreSQL storage engine, but you can build a custom one - even just by mixing together existing ones. To do so, you just need a function that takes in two arguments:
 
 - A function that given an object will return its ID
 - A migrate function that brings an object to the latest data type
@@ -116,17 +141,13 @@ function timestampedLocalStorageEngine<T extends BaseModel>(
 }
 ```
 
-### Migrations
-
-TODO
-
 ## Maintainers
 
 This project uses [bun](bun.sh) for dependency management and its build system.
 
 To get started, simply run `bun install`.
 
-To build for production, run `bun run build`.
+To build for production, run `bun run build`. Add `--watch` to watch for changes.
 
 To work on this package while using it in a project, you can link it as a dependency:
 
