@@ -1,5 +1,7 @@
 # tinyORM
 
+[![npm version](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm.svg)](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm)
+
 A minimal storage layer radically optimized toward development speed.
 
 TinyORM's [core](./tinyORM.ts) will never exceed 100 lines of zero-dependency code.
@@ -31,10 +33,14 @@ import {
   localStorageEngine,
 } from "@hesoyam.zip/tiny-orm";
 
+// Use BaseModel as the base type for your data.
+// But because it just adds a "version: string" field, you can also just add it yourself.
 type User = BaseModel & {
   username: string;
 };
 
+// You pass a list of types to createModel().
+// This enables migrations, as you'll see soon.
 const userModel = createModel<[User]>(
   (user) => user.username, // Show how to get a unique ID out of your type.
   localStorageEngine // Store data in the browser's localStorage.
@@ -59,9 +65,9 @@ This makes tinyORM integrate seamlessly with libraries like React, where storing
 
 ### Migrations
 
-You may have noticed we used a `BaseModel` type to base our own model on. All that this base type adds is a `version: number` field.
+You may have noticed we used a `BaseModel` type to base our own model on. All that this does it add a `version: number` field.
 
-Versioning your data types allows you to change them at any time without breaking production - you just have to tell TinyORM how to migrate existing data from the previous version to the new one.
+This allows you to update your model at any time without breaking production - you just have to tell TinyORM how to migrate existing data from the previous version to the new one.
 
 Let's add a role field to our user, which we want to default to "member":
 
@@ -79,15 +85,16 @@ type UserV1 = BaseModel & {
 
 type UserV2 = UserV1 & {
   username: string;
-  role: "member" | "admin";
+  role: "member" | "admin"; // The new field.
 };
 
 type User = UserV2;
 
-const userModel = createModel<[User]>(
+const userModel = createModel<[UserV1, UserV2]>(
   (user) => user.username,
   localStorageEngine,
   // We now specify our first migration to createModel().
+  // It just sets the user's role to "member" as a default.
   [
     (prev: UserV1): UserV2 => ({
       ...prev,
@@ -126,7 +133,7 @@ The storage engine function should then return a collection of methods, with no 
 // a version field.
 function timestampedLocalStorageEngine<T extends BaseModel>(
   getId: (obj: T) => string,
-  migrate: (prev: Record<string, unknown>) => T
+  migrate: (prev: BaseModel) => T
 ) {
   const ls = localStorageEngine(getId, migrate);
 

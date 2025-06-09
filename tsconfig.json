@@ -13,13 +13,6 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
 
-    // This rule doesn't play well with react - it requires passing:
-    //   <MyComponent {...(myValue ? { myProp: myValue } : {})} />
-    // instead of:
-    //   <MyComponent myProp=myValue />
-    // when myProp can be undefined.
-    "exactOptionalPropertyTypes": false,
-
     // Allow using @ to represent src folder.
     "baseUrl": ".",
     "paths": {

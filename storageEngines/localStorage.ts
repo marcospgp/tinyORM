@@ -39,7 +39,7 @@ export type TimestampedModel = BaseModel & {
 
 export function timestampedLocalStorageEngine<T extends BaseModel>(
   getId: (obj: T) => string,
-  migrate: (prev: Record<string, unknown>) => T
+  migrate: (prev: BaseModel) => T
 ) {
   const ls = localStorageEngine(getId, migrate);
 
