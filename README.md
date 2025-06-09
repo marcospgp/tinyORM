@@ -2,7 +2,7 @@
 
 A minimal storage layer radically optimized toward development speed.
 
-TinyORM's core will never exceed 100 lines of zero-dependency code.
+TinyORM's [core](./tinyORM.ts) will never exceed 100 lines of zero-dependency code.
 
 ## Install
 
@@ -162,4 +162,4 @@ cd /path/to/other/project
 bun link @hesoyam.zip/tiny-orm
 ```
 
-To publish a new version of the package to npm, bump the version in `package.json` and run `bun publish`.
+To publish a new version of the package to npm, bump the version in `package.json` and run `bun publish`. This will run the `prepublishOnly` script before publishing, which builds the library into `./dist/`.
