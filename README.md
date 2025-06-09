@@ -143,7 +143,7 @@ function timestampedLocalStorageEngine<T extends BaseModel>(
 
 ## Maintainers
 
-This project uses [bun](bun.sh) for dependency management and its build system.
+This project uses [bun](https://bun.sh) for dependency management and its build system.
 
 To get started, simply run `bun install`.
 
