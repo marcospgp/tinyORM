@@ -16,7 +16,7 @@
     // Allow using @ to represent src folder.
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["*"]
     }
   },
   "exclude": ["dist", "node_modules"]

@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm.svg)](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm)
 
-A minimal storage layer radically optimized toward development speed.
+A minimal typescript storage layer radically optimized toward development speed.
 
 TinyORM's [core](./tinyORM.ts) will never exceed 100 lines of zero-dependency code.
 
@@ -39,9 +39,10 @@ type User = BaseModel & {
   username: string;
 };
 
-// You pass a list of types to createModel().
-// This enables migrations, as you'll see soon.
-const userModel = createModel<[User]>(
+// We pass all our datatype's versions to createModel(), which enables proper typing for migrations.
+type UserVersions = [User];
+
+const userModel = createModel<UserVersions>(
   (user) => user.username, // Show how to get a unique ID out of your type.
   localStorageEngine // Store data in the browser's localStorage.
 );
@@ -89,8 +90,9 @@ type UserV2 = UserV1 & {
 };
 
 type User = UserV2;
+type UserVersions = [UserV1, UserV2];
 
-const userModel = createModel<[UserV1, UserV2]>(
+const userModel = createModel<UserVersions>(
   (user) => user.username,
   localStorageEngine,
   // We now specify our first migration to createModel().
@@ -113,6 +115,10 @@ const admin: User = {
 Now whenever you retrieve a v1 user, TinyORM will automatically apply your migration to bring them up to v2.
 
 Migrations are always applied at data retrieval time, so there are no world-stopping migrations written in database-specific dialects. Everything happens in your app code.
+
+This also means you can rely on storage mediums you don't control, such as the browser's `localStorage`.
+
+If you get something wrong and a migration fails with some existing data, you can just update the migration to handle that scenario properly.
 
 ### Storage engines
 
