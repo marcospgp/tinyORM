@@ -2,6 +2,8 @@
 
 A minimal storage layer radically optimized toward development speed.
 
+TinyORM's core will never exceed 100 lines of zero-dependency code.
+
 ## Install
 
 ```shell
