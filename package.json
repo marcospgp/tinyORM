@@ -1,7 +1,7 @@
 {
   "name": "@hesoyam.zip/tiny-orm",
   "description": "A minimal storage layer radically optimized toward development speed.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marcospgp/tinyORM.git"
@@ -13,7 +13,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "bun build index.ts --outdir dist",
+    "build": "rm -rf ./dist && bun build index.ts --outdir dist && bun run build:types",
+    "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json --outdir dist",
     "prepublishOnly": "bun run build"
   },
   "devDependencies": {

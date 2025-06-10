@@ -24,45 +24,29 @@ pnpm add @hesoyam.zip/tiny-orm
 
 You're a builder who wants to ship instead of designing the perfect database schema before you get your first user. TinyORM is for you!
 
-You just specify a data type and how you want to store it:
+These are the core ideas behind it:
 
-```typescript
-import {
-  BaseModel,
-  createModel,
-  localStorageEngine,
-} from "@hesoyam.zip/tiny-orm";
+- Your schemas are just defined as regular typescript types.
+- Whenever you want to update a type, you create a new version of it and tell TinyORM how it can migrate the previous version to it.
+- Migrations are just plain typescript functions, and are applied at data retrieval time. There are no world-stopping migrations in a database-specific language.
+- TinyORM is database agnostic. It ships with `localStorage` and postgreSQL storage engines, but you can store your data anywhere by writing a custom one. A storage engine is just a function that returns a collection of methods like `get()` and `save()`.
 
-// Use BaseModel as the base type for your data.
-// But because it just adds a "version: string" field, you can also just add it yourself.
-type User = BaseModel & {
-  username: string;
-};
+To get started, check out the following examples:
 
-// We pass all our datatype's versions to createModel(), which enables proper typing for migrations.
-type UserVersions = [User];
+1. Specify your first type
+2. Update your type and specify a migration
+3. Create a custom storage engine
 
-const userModel = createModel<UserVersions>(
-  (user) => user.username, // Show how to get a unique ID out of your type.
-  localStorageEngine // Store data in the browser's localStorage.
-);
 
-// You then simply create objects of your type as usual:
-const myUser: User = {
-  version: userModel.version,
-  username: "myUser",
-};
 
-// Use the model to persist them:
-userModel.save(myUser);
 
-// And retrieve them at any time:
-const myUser = userModel.get("myUser");
-```
 
-Note that the data itself is not part of the model - you create plain objects separately and pass them in to your model's methods as required.
 
-This makes tinyORM integrate seamlessly with libraries like React, where storing state requires plain objects.
+
+
+
+
+
 
 ### Migrations
 
@@ -120,20 +104,29 @@ This also means you can rely on storage mediums you don't control, such as the b
 
 If you get something wrong and a migration fails with some existing data, you can just update the migration to handle that scenario properly.
 
+If you want to remove a field from your type, you don't have to define the new one from scratch - you can use typescript's `Omit` helper:
+
+```typescript
+// Rename "role" field to "group".
+type UserV3 = Omit<UserV2, "role"> & {
+  group: "member" | "admin";
+};
+```
+
 ### Storage engines
 
 One of the main strengths of TinyORM is that it is database agnostic. You can write a custom storage engine that mixes together multiple ones - such as storing data in `localStorage` for guest users, and in a postgreSQL database for logged in ones.
 
-TinyORM ships with a `localStorage` and a postgreSQL storage engine out of the box.
+TinyORM ships with a [`localStorage`](./storageEngines/localStorage.ts) and a postgreSQL (coming soon!) storage engine out of the box.
 
 A storage engine is just a function that receives two parameters:
 
 - A function that given an object will return its ID
 - A migrate function that brings an object up to the latest version of its data type
 
-Both of these are defined by the user for each of their data types.
+Both of these are defined by the user for a given data type.
 
-The storage engine function then uses these to return a collection of methods that handle the storage and retrieval of data:
+The storage engine function then uses these to return a collection of methods that handle the storage and retrieval of data.
 
 ```typescript
 // The storage engine function can access the type of object it is going to be storing through the

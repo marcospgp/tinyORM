@@ -1,4 +1,4 @@
-import { BaseModel } from "tinyORM";
+import { BaseModel } from "@/tinyORM";
 
 export function localStorageEngine<T extends BaseModel>(
   getId: (obj: T) => string,

@@ -1,2 +1,2 @@
-export * from "tinyORM";
-export * from "./storageEngines/localStorage";
+export * from "@/tinyORM";
+export * from "@/storageEngines/localStorage";
