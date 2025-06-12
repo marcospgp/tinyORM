@@ -13,9 +13,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf ./dist && bun build index.ts --outdir dist && bun run build:types",
+    "build": "rm -rf ./dist && bun build src/index.ts --outdir dist && bun run build:types && bun test || rm -rf ./dist",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json --outdir dist",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",

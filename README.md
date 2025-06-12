@@ -1,10 +1,10 @@
 # tinyORM
 
-[![npm version](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm.svg)](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm)
+[![npm version](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm.svg)](https://www.npmjs.com/package/@hesoyam.zip/tiny-orm)
 
 A minimal typescript storage layer radically optimized toward development speed.
 
-TinyORM's [core](./tinyORM.ts) will never exceed 100 lines of zero-dependency code.
+TinyORM's [core](./src/tinyORM.ts) will never exceed 100 lines of zero-dependency code.
 
 ## Install
 
@@ -26,133 +26,72 @@ You're a builder who wants to ship instead of designing the perfect database sch
 
 These are the core ideas behind it:
 
-- Your schemas are just defined as regular typescript types.
-- Whenever you want to update a type, you create a new version of it and tell TinyORM how it can migrate the previous version to it.
-- Migrations are just plain typescript functions, and are applied at data retrieval time. There are no world-stopping migrations in a database-specific language.
-- TinyORM is database agnostic. It ships with `localStorage` and postgreSQL storage engines, but you can store your data anywhere by writing a custom one. A storage engine is just a function that returns a collection of methods like `get()` and `save()`.
+- Your schemas are defined as regular typescript types.
+- You can update your types at any time by providing a migration, which is just a plain typescript function that updates an object from the previous version to the new one.
+- Migrations are applied at retrieval time to bring previously stored data up to date. This means you can cleanly integrate with both databases you control and those you don't (such as the browser's `localStorage`).
+- Storage and retrieval logic is abstracted into storage engines, which are just functions that return a collection of methods like `get()` and `save()`.
 
-To get started, check out the following examples:
+TinyORM ships with these [storage engines](<(./src/storageEngines)>), but you can write a custom one too - even just by combining existing ones.
+
+Some reasons you may want to write a custom storage engine could be:
+
+- Using the browser's `localStorage` for logged out users and a cloud database for logged in users.
+- Pre or post processing your objects, such as updating an `updated_at`
+  timestamp before saving.
+
+There are deliberately no restrictions on what methods a storage engine exposes - just like there is no reason to lock down your schema from the start, your storage logic should also remain open to iteration.
+
+To get started with TinyORM, check out the following examples:
 
 1. Specify your first type
 2. Update your type and specify a migration
 3. Create a custom storage engine
 
+You may have noticed these examples are actually the test suite for this project.
 
+TinyORM's codebase is written to be simple and readable. You shouldn't be afraid to jump into the code and see what's going on for yourself!
 
+## Tradeoffs
 
-
-
-
-
-
-
-
+Everything in computer science has tradeoffs, and TinyORM is no exception. These are the ones we get by radically optimizing for simplicity and development speed.
 
 ### Migrations
 
-You may have noticed we used a `BaseModel` type to base our own model on. All that this does it add a `version: number` field.
+Migrations being applied at data retrieval time avoids having to maintain database specific migration logic, applying it separately all at once, and risking affecting all your data with a buggy migration.
 
-This allows you to update your model at any time without breaking production - you just have to tell TinyORM how to migrate existing data from the previous version to the new one.
+It also means you don't have to control the database, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
 
-Let's add a role field to our user, which we want to default to "member":
-
-```typescript
-import {
-  BaseModel,
-  createModel,
-  localStorageEngine,
-} from "@hesoyam.zip/tiny-orm";
-
-// We keep our previous type around so we can type our migration function properly.
-type UserV1 = BaseModel & {
-  username: string;
-};
-
-type UserV2 = UserV1 & {
-  username: string;
-  role: "member" | "admin"; // The new field.
-};
-
-type User = UserV2;
-type UserVersions = [UserV1, UserV2];
-
-const userModel = createModel<UserVersions>(
-  (user) => user.username,
-  localStorageEngine,
-  // We now specify our first migration to createModel().
-  // It just sets the user's role to "member" as a default.
-  [
-    (prev: UserV1): UserV2 => ({
-      ...prev,
-      role: "member",
-    }),
-  ]
-);
-
-const admin: User = {
-  version: userModel.version, // userModel.version will now be 2.
-  username: "administrator",
-  role: "admin",
-};
-```
-
-Now whenever you retrieve a v1 user, TinyORM will automatically apply your migration to bring them up to v2.
-
-Migrations are always applied at data retrieval time, so there are no world-stopping migrations written in database-specific dialects. Everything happens in your app code.
-
-This also means you can rely on storage mediums you don't control, such as the browser's `localStorage`.
-
-If you get something wrong and a migration fails with some existing data, you can just update the migration to handle that scenario properly.
-
-If you want to remove a field from your type, you don't have to define the new one from scratch - you can use typescript's `Omit` helper:
-
-```typescript
-// Rename "role" field to "group".
-type UserV3 = Omit<UserV2, "role"> & {
-  group: "member" | "admin";
-};
-```
+The downside is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
 
 ### Storage engines
 
-One of the main strengths of TinyORM is that it is database agnostic. You can write a custom storage engine that mixes together multiple ones - such as storing data in `localStorage` for guest users, and in a postgreSQL database for logged in ones.
+Being database agnostic and placing no restrictions on the methods that a storage engine exposes means you have total flexibility in your storage logic.
 
-TinyORM ships with a [`localStorage`](./storageEngines/localStorage.ts) and a postgreSQL (coming soon!) storage engine out of the box.
+You can expose a way for your models to send SQL queries with a `query(sql: string)` or just a `get(id: string)` that retrieves items one at a time.
 
-A storage engine is just a function that receives two parameters:
+The downside is that users have to become familiar with the API exposed by a given storage engine, and that switching databases is not a one line change.
 
-- A function that given an object will return its ID
-- A migrate function that brings an object up to the latest version of its data type
+## Architecture suggestions
 
-Both of these are defined by the user for a given data type.
+### Separating data per user
 
-The storage engine function then uses these to return a collection of methods that handle the storage and retrieval of data.
+This library is entirely focused on the client side and makes no assumptions about your backend.
 
-```typescript
-// The storage engine function can access the type of object it is going to be storing through the
-// generic parameter T.
-// You can call this parameter anything you want, but it should always extend BaseModel, which ensures it has
-// a version field.
-function timestampedLocalStorageEngine<T extends BaseModel>(
-  getId: (obj: T) => string,
-  migrate: (prev: BaseModel) => T
-) {
-  const ls = localStorageEngine(getId, migrate);
+While you can write a custom engine that interacts with an arbitrary server side API, you may want to consider simplifying your architecture by storing each user's data separately and simply ensuring that a user can only access their own data.
 
-  return {
-    // This custom storage engine mostly just exposes functionality from the existing localStorageEngine.
-    ...ls,
-    // We do however override the save method with one that logs a timestamp.
-    save(obj: T) {
-      obj["updated_at"] = new Date().toISOString();
+This avoids having to maintain a backend API with complex authorization logic - and perhaps having a backend at all.
 
-      ls.save(obj);
-    },
-  };
-}
-```
+If each user holds a key to their data, they can just access it directly.
 
-The only thing a storage engine has to keep in mind is to always run an object through the migrate function after retrieving it, to make sure no data is ever returned in an outdated format. The exception is when it is relying on another storage engine, which should already be taking care of that.
+Public data that should be accessible to multiple users can be stored in a separate, shared location.
+
+### Complex queries may not be necessary
+
+You may not need to expose a complex querying API in your custom storage engine.
+
+Consider allowing your users to keep more of their data on-device and seeing your database as more of a backup, long-term storage.
+
+Keeping querying and processing logic entirely in your client side both simplifies your architecture and leverages the user's device for computation.
 
 ## Maintainers
 

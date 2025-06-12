@@ -1,54 +1,46 @@
-import { BaseModel } from "@/tinyORM";
+import { createStorageEngine } from "@/tinyORM";
 
-export function localStorageEngine<T extends BaseModel>(
-  getId: (obj: T) => string,
-  migrate: (prev: BaseModel) => T
-) {
-  return {
-    get(id: string): T {
-      const item = localStorage.getItem(id);
-      if (!item) {
-        throw new Error(`Item with ID "${id}" not found.`);
-      }
-
-      const obj = JSON.parse(item) as BaseModel;
-
-      return migrate(obj);
-    },
-    save(objOrObjs: T | T[]) {
-      let objs;
-      if (Array.isArray(objOrObjs)) {
-        objs = objOrObjs;
-      } else {
-        objs = [objOrObjs];
-      }
-
-      objs.forEach((x) => {
-        localStorage.setItem(getId(x), JSON.stringify(x));
-      });
-    },
-  };
-}
-
-export type TimestampedModel = BaseModel & {
-  /** ISO timestamp. */
-  created_at: string;
-  /** ISO timestamp. */
-  updated_at: string;
+type Test = {
+  mama: number;
 };
 
-export function timestampedLocalStorageEngine<T extends BaseModel>(
-  getId: (obj: T) => string,
-  migrate: (prev: BaseModel) => T
-) {
-  const ls = localStorageEngine(getId, migrate);
+type Dict = Record<string, any>;
 
-  return {
-    ...ls,
-    save(id: string, obj: Record<string, unknown>) {
-      obj["updated_at"] = new Date().toISOString();
+type Stored<T extends Dict = Dict> = {
+  modelName: string;
+  modelVersion: number;
+  object: T;
+};
 
-      localStorage.setItem(id, JSON.stringify(obj));
-    },
-  };
-}
+export const localStorageEngine = createStorageEngine(
+  (modelName, modelVersion, getId, migrate) => {
+    return {
+      get(...ids: string[]) {
+        return ids.map((rawId) => {
+          const id = `${modelName}-${rawId}`;
+          const item = localStorage.getItem(id);
+          if (!item) {
+            throw new Error(`Item with ID "${id}" not found.`);
+          }
+
+          const obj = JSON.parse(item) as Stored;
+
+          return migrate(obj.object, obj.modelVersion);
+        });
+      },
+      save(...objs: Test[]) {
+        objs.forEach((x) => {
+          const store: Stored = {
+            modelName,
+            modelVersion,
+            object: x,
+          };
+          localStorage.setItem(
+            `${modelName}-${getId(x)}`,
+            JSON.stringify(store)
+          );
+        });
+      },
+    };
+  }
+);
