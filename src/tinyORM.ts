@@ -2,17 +2,6 @@ type Dict = Record<string, any>;
 type FunctionDict = Record<string, (...args: any[]) => any>;
 type Migration = (obj: Dict) => Dict;
 
-export type StorageEngineParams<T extends Dict> = {
-  modelName: string;
-  modelVersion: number;
-  getId: (obj: T) => string;
-  migrate: (prev: Dict, version: number) => T;
-};
-
-type StorageEngine<T extends Dict, R extends FunctionDict> = (
-  params: StorageEngineParams<T>
-) => R;
-
 export function createModel<
   T extends Dict, // Model type
   S extends FunctionDict, // Storage engine return type
@@ -65,3 +54,14 @@ export function createModel<
     },
   };
 }
+
+export type StorageEngineParams<T extends Dict> = {
+  modelName: string;
+  modelVersion: number;
+  getId: (obj: T) => string;
+  migrate: (prev: Dict, version: number) => T;
+};
+
+type StorageEngine<T extends Dict, R extends FunctionDict> = (
+  params: StorageEngineParams<T>
+) => R;
