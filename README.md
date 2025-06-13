@@ -45,7 +45,7 @@ To get started with TinyORM, check out the following examples:
 
 1. Specify your first type
 
-<https://github.com/marcospgp/tinyORM/blob/main/tests/firstType.test.ts>
+https://github.com/marcospgp/tinyORM/blob/main/tests/firstType.test.ts
 
 2. Update your type and specify a migration
 
