@@ -1,46 +1,44 @@
-import { createStorageEngine } from "@/tinyORM";
-
-type Test = {
-  mama: number;
-};
+import { StorageEngineParams } from "@/tinyORM";
 
 type Dict = Record<string, any>;
 
-type Stored<T extends Dict = Dict> = {
-  modelName: string;
-  modelVersion: number;
-  object: T;
-};
+export function localStorageEngine<T extends Dict>({
+  modelName,
+  modelVersion,
+  getId,
+  migrate,
+}: StorageEngineParams<T>) {
+  type Stored = {
+    modelName: string;
+    modelVersion: number;
+    object: Dict;
+  };
 
-export const localStorageEngine = createStorageEngine(
-  (modelName, modelVersion, getId, migrate) => {
-    return {
-      get(...ids: string[]) {
-        return ids.map((rawId) => {
-          const id = `${modelName}-${rawId}`;
-          const item = localStorage.getItem(id);
-          if (!item) {
-            throw new Error(`Item with ID "${id}" not found.`);
-          }
+  return {
+    get(...ids: string[]) {
+      return ids.map((rawId) => {
+        const id = `${modelName}-${rawId}`;
 
-          const obj = JSON.parse(item) as Stored;
+        const item = localStorage.getItem(id);
 
-          return migrate(obj.object, obj.modelVersion);
-        });
-      },
-      save(...objs: Test[]) {
-        objs.forEach((x) => {
-          const store: Stored = {
-            modelName,
-            modelVersion,
-            object: x,
-          };
-          localStorage.setItem(
-            `${modelName}-${getId(x)}`,
-            JSON.stringify(store)
-          );
-        });
-      },
-    };
-  }
-);
+        if (!item) {
+          throw new Error(`Item with ID "${id}" not found.`);
+        }
+
+        const obj = JSON.parse(item) as Stored;
+
+        return migrate(obj.object, obj.modelVersion);
+      });
+    },
+    save(...objs: T[]) {
+      objs.forEach((x) => {
+        const store: Stored = {
+          modelName,
+          modelVersion,
+          object: x,
+        };
+        localStorage.setItem(`${modelName}-${getId(x)}`, JSON.stringify(store));
+      });
+    },
+  };
+}

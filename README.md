@@ -44,7 +44,11 @@ There are deliberately no restrictions on what methods a storage engine exposes 
 To get started with TinyORM, check out the following examples:
 
 1. Specify your first type
+
+<https://github.com/marcospgp/tinyORM/blob/main/tests/firstType.test.ts>
+
 2. Update your type and specify a migration
+
 3. Create a custom storage engine
 
 You may have noticed these examples are actually the test suite for this project.

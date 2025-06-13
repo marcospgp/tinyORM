@@ -1,27 +1,45 @@
-import { createStorageEngine } from "@/tinyORM";
+import { StorageEngineParams } from "@/tinyORM";
 
-export const inMemoryStorageEngine = createStorageEngine(
-  (modelName, modelVersion, getId, migrate) => ({
-    get(id: string): T {
+type Dict = Record<string, any>;
+
+export function inMemoryStorageEngine<T extends Dict>({
+  modelName,
+  modelVersion,
+  getId,
+  migrate,
+}: StorageEngineParams<T>) {
+  type Stored = {
+    modelName: string;
+    modelVersion: number;
+    object: Dict;
+  };
+
+  const storage: Record<string, Stored> = {};
+
+  return {
+    get(rawId: string) {
+      const id = `${modelName}-${rawId}`;
+
       const obj = storage[id];
 
       if (!obj) {
         throw new Error(`Item with ID "${id}" not found.`);
       }
 
-      return migrate(obj);
+      return migrate(obj.object, obj.modelVersion);
     },
-    save(objOrObjs: T | T[]) {
-      let objs;
-      if (Array.isArray(objOrObjs)) {
-        objs = objOrObjs;
-      } else {
-        objs = [objOrObjs];
-      }
-
+    save(...objs: T[]) {
       objs.forEach((x) => {
-        storage[getId(x)] = x;
+        const store: Stored = {
+          modelName,
+          modelVersion,
+          object: x,
+        };
+
+        const id = `${modelName}-${getId(x)}`;
+
+        storage[id] = store;
       });
     },
-  })
-);
+  };
+}

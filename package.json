@@ -13,7 +13,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf ./dist && bun build src/index.ts --outdir dist && bun run build:types && bun test || rm -rf ./dist",
+    "build": "bun run build:noTest && bun test || rm -rf ./dist",
+    "build:noTest": "rm -rf ./dist && bun build src/index.ts --outdir dist && bun run build:types",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json --outdir dist",
     "prepublishOnly": "bun run build",
     "test": "bun test"

@@ -10,8 +10,8 @@ test("Defining the first type.", () => {
 
   const userModel = createModel(
     // The first parameter is a unique name for your type.
-    // This allows storage engines to distinguish between different models,
-    // avoiding issues with overlapping IDs and possibly optimizing storage.
+    // This allows storage engines to avoid issues with overlapping IDs and
+    // possibly to optimize storage.
     "user",
     // The second parameter shows TinyORM how to get a unique ID out of your
     // type.

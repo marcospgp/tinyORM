@@ -1,10 +1,4 @@
 # TODO
 
-- will we need to enforce a "document" field for the document type?
 - the postgresql/supabase storage engine
-
-## Readme
-
-questions to answer:
-
-- what methods do storage engines that ship with tinyORM expose?
+- Make sure when storage engine does return migrate(x) the type is inferred to be the model's type
