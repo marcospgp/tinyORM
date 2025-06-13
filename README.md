@@ -28,18 +28,10 @@ These are the core ideas behind it:
 
 - Your schemas are defined as regular typescript types.
 - You can update your types at any time by providing a migration, which is just a plain typescript function that updates an object from the previous version to the new one.
-- Migrations are applied at retrieval time to bring previously stored data up to date. This means you can cleanly integrate with both databases you control and those you don't (such as the browser's `localStorage`).
-- Storage and retrieval logic is abstracted into storage engines, which are just functions that return a collection of methods like `get()` and `save()`.
+- Migrations are applied at retrieval time. This abstracts away an entire class of complexity by not having to worry about syncing your app and databases. It also allows you to store data in places the user controls, such as their browser's `localStorage`.
+- Storage and retrieval logic is abstracted into storage engines, which are just functions that return a collection of methods, with no restrictions - like `get()` and `save()`.
 
-TinyORM ships with these [storage engines](<(./src/storageEngines)>), but you can write a custom one too - even just by combining existing ones.
-
-Some reasons you may want to write a custom storage engine could be:
-
-- Using the browser's `localStorage` for logged out users and a cloud database for logged in users.
-- Pre or post processing your objects, such as updating an `updated_at`
-  timestamp before saving.
-
-There are deliberately no restrictions on what methods a storage engine exposes - just like there is no reason to lock down your schema from the start, your storage logic should also remain open to iteration.
+You may notice TinyORM is light on constraints. You're not supposed to know what your schema or your storage logic is going to look like. The goal is to give you a simple paradigm that you can build with, starting from a simple foundation.
 
 To get started with TinyORM, check out the following examples:
 
@@ -51,17 +43,29 @@ You may have noticed these examples are actually the test suite for this project
 
 TinyORM's codebase is written to be simple and readable. You shouldn't be afraid to jump into the code and see what's going on for yourself!
 
+## Storage engines
+
+TinyORM ships with these [storage engines](./src/storageEngines), but you can write a custom one too - even by just combining existing ones.
+
+Some reasons you may want to write a custom storage engine could be:
+
+- Using more than one storage medium, such as the browser's `localStorage` for logged out users and a cloud database for logged in users.
+- Pre or post processing your objects, such as updating an `updated_at`
+  timestamp before saving. Storage engines can constrain the types they handle to include certain fields.
+
 ## Tradeoffs
 
 Everything in computer science has tradeoffs, and TinyORM is no exception. These are the ones we get by radically optimizing for simplicity and development speed.
 
 ### Migrations
 
-Migrations being applied at data retrieval time avoids having to maintain database specific migration logic, applying it separately all at once, and risking affecting all your data with a buggy migration.
+Migrations being applied at data retrieval time avoids having to maintain database specific migration logic and making sure it gets applied at the right time. You no longer have to think about syncing your database's state with your app, as the app now owns that state.
 
-It also means you don't have to control the database, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
+It also means you don't have to be able to reach the database at any time, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
 
-The downside is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
+A downside is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
+
+Another downside is that your stored data isn't guaranteed to be in the latest format. You can still make assumptions on it, such as assuming it has a `created_at` field for time-based querying, but your storage engine must enforce this assumption by constraining its generic type parameter (with something like `T extends Timestamped`).
 
 ### Storage engines
 
