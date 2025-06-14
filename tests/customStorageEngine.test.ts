@@ -1,70 +1,95 @@
-// ### Storage engines
+import { createModel, inMemoryStorageEngine, StorageEngineParams } from "dist";
+import { expect, test } from "bun:test";
 
-// One of the main strengths of TinyORM is that it is database agnostic. You can write a custom storage engine that mixes together multiple ones - such as storing data in `localStorage` for guest users, and in a postgreSQL database for logged in ones.
+test("Building a custom storage engine.", () => {
+  // One of the main strengths of TinyORM is that it is database agnostic.
+  // You can write a custom storage engine for any storage medium, or even one
+  // that mixes together other existing storage engines.
+  // A storage engine can also simply add functionality on top of a single storage
+  // medium.
+  // For this example, we will enforce "created_at" and "updated_at" timestamps
+  // in our objects.
 
-// TinyORM ships with a [`localStorage`](./storageEngines/localStorage.ts) and a postgreSQL (coming soon!) storage engine out of the box.
+  // We start by creating a type that encodes the assumptions we want to be able
+  // to make about our objects.
+  type Timestamped = {
+    /** ISO timestamp. */
+    created_at: string;
+    /** ISO timestamp. */
+    updated_at: string;
+  };
 
-// A storage engine is just a function that receives two parameters:
+  // We then create our storage engine.
+  // A storage engine is just a generic function that receives some data from
+  // the model that is using it and returns a set of methods that will be
+  // exposed in the model.
+  // There are no restrictions on what these methods look like.
 
-// - A function that given an object will return its ID
-// - A migrate function that brings an object up to the latest version of its data type
+  // Note that we use the Timestamped type as a constraint on the generic
+  // parameter.
+  // If we wanted to specify no constraints we could use Record<string, any>
+  // instead.
+  function timestampedStorageEngine<T extends Timestamped>({
+    // The name of the model that is trying to use this storage engine.
+    modelName,
+    // The current version of that model.
+    modelVersion,
+    // A function that returns a unique ID given an object of type T (our
+    // generic parameter).
+    getId,
+    // A function that updates a previously stored object to the latest version,
+    // compatible with type T.
+    // A storage engine must always call this function before returning any
+    // data.
+    migrate,
+  }: StorageEngineParams<T>) {
+    // This storage engine will actually rely on an existing one to store its
+    // data.
+    // It just adds some functionality on top of it.
+    const engine = inMemoryStorageEngine({
+      modelName,
+      modelVersion,
+      getId,
+      migrate,
+    });
 
-// Both of these are defined by the user for a given data type.
+    return {
+      ...engine,
+      save(...objs: T[]) {
+        engine.save(
+          ...objs.map((x) => ({ ...x, updated_at: new Date().toISOString() }))
+        );
+      },
+    };
+  }
 
-// The storage engine function then uses these to return a collection of methods that handle the storage and retrieval of data.
+  // We can now define a type:
+  type User = {
+    username: string;
+    email: string;
+    // Note that if we remove these fields, our model definition will error
+    // below - because this type will not meet the storage engine's constraint.
+    created_at: string;
+    updated_at: string;
+  };
 
-// ```typescript
-// // The storage engine function can access the type of object it is going to be storing through the
-// // generic parameter T.
-// // You can call this parameter anything you want, but it should always extend BaseModel, which ensures it has
-// // a version field.
-// function timestampedLocalStorageEngine<T extends BaseModel>(
-//   getId: (obj: T) => string,
-//   migrate: (prev: BaseModel) => T
-// ) {
-//   const ls = localStorageEngine(getId, migrate);
+  // And a model that uses that type and our custom engine:
+  const timestampedUser = createModel(
+    "user",
+    (x: User) => x.username,
+    timestampedStorageEngine
+  );
 
-//   return {
-//     // This custom storage engine mostly just exposes functionality from the existing localStorageEngine.
-//     ...ls,
-//     // We do however override the save method with one that logs a timestamp.
-//     save(obj: T) {
-//       obj["updated_at"] = new Date().toISOString();
+  const startingTimestamp = new Date(1990, 0, 1).toISOString();
 
-//       ls.save(obj);
-//     },
-//   };
-// }
-// ```
+  timestampedUser.save({
+    username: "hunter2",
+    email: "hunter2@example.com",
+    created_at: startingTimestamp,
+    updated_at: startingTimestamp,
+  });
 
-// The only thing a storage engine has to keep in mind is to always run an object through the migrate function after retrieving it, to make sure no data is ever returned in an outdated format. The exception is when it is relying on another storage engine, which should already be taking care of that.
+  const storedUser = timestampedUser.get("hunter2");
 
-// export type TimestampedModel = BaseModel & {
-//   /** ISO timestamp. */
-//   created_at: string;
-//   /** ISO timestamp. */
-//   updated_at: string;
-// };
-
-// export function timestampedLocalStorageEngine<T extends TimestampedModel>(
-//   getId: (obj: T) => string,
-//   migrate: (prev: BaseModel) => T
-// ) {
-//   const ls = localStorageEngine(getId, migrate);
-
-//   return {
-//     ...ls,
-//     save(id: string, obj: TimestampedModel) {
-//       obj.updated_at = new Date().toISOString();
-
-//       localStorage.setItem(id, JSON.stringify(obj));
-//     },
-//   };
-// }
-
-// createModel(
-//   (obj: TimestampedModel) => String(obj.version),
-//   timestampedLocalStorageEngine,
-//   {},
-//   []
-// );
+  expect(storedUser.updated_at).not.toBe(startingTimestamp);
+});
