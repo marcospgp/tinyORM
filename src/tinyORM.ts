@@ -1,6 +1,6 @@
 type Dict = Record<string, any>;
 type FunctionDict = Record<string, (...args: any[]) => any>;
-type Migration<From, To> = (obj: From) => To;
+type Migration<From extends Dict, To extends Dict> = (obj: From) => To;
 
 export function createModel<
   T extends Dict, // Model type
@@ -11,7 +11,7 @@ export function createModel<
   getId: (obj: T) => string,
   storageEngine: StorageEngine<T, S>,
   utilityMethods: M = {} as M,
-  migrations: Migration[] = []
+  migrations: Migration<any, any>[] = []
 ): M & S & { create(obj: T): T } {
   const currentVersion = migrations.length + 1;
 
