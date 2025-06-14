@@ -1,6 +1,6 @@
 type Dict = Record<string, any>;
 type FunctionDict = Record<string, (...args: any[]) => any>;
-type Migration = (obj: Dict) => Dict;
+type Migration<From, To> = (obj: From) => To;
 
 export function createModel<
   T extends Dict, // Model type

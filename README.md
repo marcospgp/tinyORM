@@ -61,7 +61,7 @@ Everything in computer science has tradeoffs, and TinyORM is no exception. These
 
 Migrations being applied at data retrieval time avoids having to maintain database specific migration logic and making sure it gets applied at the right time. You no longer have to think about syncing your database's state with your app, as the app now owns that state.
 
-It also means you don't have to be able to reach the database at any time, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
+It also means you don't have to control every database you store data on, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
 
 A downside is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
 

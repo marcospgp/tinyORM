@@ -1,96 +1,50 @@
-import { BaseModel, createModel, inMemoryStorageEngine } from "dist";
-import { expect, test } from "bun:test";
+import { createModel, inMemoryStorageEngine } from "dist";
+import { test } from "bun:test";
 
 test("Writing the first migration.", () => {
   // We can now move on to writing our first migration.
 
-  // Say we have the same user type as in the previous example (note we have
-  // renamed it "UserV1" instead of just "User"):
-  type UserV1 = BaseModel & {
+  // We start with the same user type as in the previous example.
+  // Since we'll now have more than one user type, we'll add a V1 suffix.
+  type UserV1 = {
     username: string;
     email: string;
   };
 
-  // But now users are supposed to have physical addresses instead of emails.
-  // So we can define a new type:
+  // Let's imagine that users are now supposed to have physical addresses
+  // instead of emails. We thus define a new type:
   type UserV2 = Omit<UserV1, "email"> & {
     address: string;
   };
 
-  // We can alias our User type to this latest version:
+  // Note how we used typescript's Omit to remove fields from an existing type,
+  // which lets us avoid repeating the previous version's fields.
+
+  // We can now alias our User type to this latest version:
   type User = UserV2;
 
-  // Now when creating our model we have to specify how a UserV1 can be turned
-  // into a UserV2:
-  const userModel = createModel(
+  // Now when creating our model, we specify a migration showing how a UserV1
+  // can be updated into a UserV2:
+  createModel(
     "user",
     (user: User) => user.username,
     inMemoryStorageEngine,
     {},
     // The fifth parameter is a list of migrations.
-    // Pay attention to the type annotations, as they are really helpful in
-    // ensuring your migrations are correct.
+    // Including the proper type annotations helps ensure the migration is
+    // valid.
     [
       (prev: UserV1): UserV2 => {
+        // Remove email field.
         const { email: _, ...rest } = prev;
+        // Add address field.
         return { ...rest, address: "unknown" };
       },
     ]
   );
 
-  // We start by defining our type. For this example we specify a user account.
-  // Basing it on BaseModel just adds a "version: number" field, which enables
-  // migrations.
-  type User = BaseModel & {
-    username: string;
-    email: string;
-  };
-
-  const userModel = createModel(
-    // The first parameter is a unique name for your type.
-    // This allows storage engines to distinguish between different models, even
-    // with overlapping IDs.
-    "user",
-    // The second parameter shows TinyORM how to get a unique ID out of your
-    // type.
-    // Annotating the type here is enough for typescript to infer it as the one
-    // we'll be using for this model.
-    (user: User) => user.username,
-    inMemoryStorageEngine
-  );
-
-  // You then simply create objects of your type.
-  // Your data is always a plain object, so you can just use it with libraries
-  // that expect that format - such as React's useState() hook.
-  const user: User = {
-    version: userModel.version, // Get current version number from the model.
-    username: "hunter2",
-    email: "hunter2@example.com",
-  };
-
-  // To persist an object, use a method exposed by your selected storage engine:
-  userModel.save(user);
-
-  // Same for retrieving it:
-  const retrievedUser = userModel.get("hunter2");
-
-  expect(retrievedUser.email).toBe("hunter2@example.com");
-
-  // We can also add helper methods to our models:
-  const userModel2 = createModel(
-    "user",
-    (user: User) => user.username,
-    inMemoryStorageEngine,
-    // The third parameter specifies any methods we want to attach to the model.
-    {
-      getEmailDomain(user: User) {
-        return user.email.split("@")[1] || "";
-      },
-    }
-  );
-
-  // We can then call our utility method:
-  const domain = userModel2.getEmailDomain(user);
-
-  expect(domain).toBe("example.com");
+  // Remember that migrations are applied at retrieval time, so this new model
+  // has no effect until you load data and save it again.
+  // The storage engine will applies any migrations needed to get your data to
+  // the latest version as it retrieves it.
 });
