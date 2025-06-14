@@ -1,16 +1,7 @@
-type Test = {
-    mama: number;
-};
-export declare const localStorageEngine: (modelName: string, modelVersion: number, getId: (obj: {
-    [x: string]: any;
-}) => string, migrate: (prev: {
-    [x: string]: any;
-}, version: number) => {
-    [x: string]: any;
-}) => {
-    get(...ids: string[]): {
-        [x: string]: any;
-    }[];
-    save(...objs: Test[]): void;
+import { StorageEngineParams } from "@/tinyORM";
+type Dict = Record<string, any>;
+export declare function localStorageEngine<T extends Dict>({ modelName, modelVersion, getId, migrate, }: StorageEngineParams<T>): {
+    get(...ids: string[]): T[];
+    save(...objs: T[]): void;
 };
 export {};

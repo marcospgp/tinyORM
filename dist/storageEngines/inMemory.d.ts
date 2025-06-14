@@ -1,14 +1,7 @@
+import { StorageEngineParams } from "@/tinyORM";
 type Dict = Record<string, any>;
-export declare const inMemoryStorageEngine: (modelName: string, modelVersion: number, getId: (obj: {
-    [x: string]: any;
-}) => string, migrate: (prev: {
-    [x: string]: any;
-}, version: number) => {
-    [x: string]: any;
-}) => {
-    get(rawId: string): {
-        [x: string]: any;
-    };
-    save(...objs: Dict[]): void;
+export declare function inMemoryStorageEngine<T extends Dict>({ modelName, modelVersion, getId, migrate, }: StorageEngineParams<T>): {
+    get(rawId: string): T;
+    save(...objs: T[]): void;
 };
 export {};

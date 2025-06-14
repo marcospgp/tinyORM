@@ -1,5 +1,5 @@
 // src/tinyORM.ts
-function createModel(modelName, getId, storageEngine, methods = {}, migrations = []) {
+function createModel(modelName, getId, storageEngine, utilityMethods = {}, migrations = []) {
   const currentVersion = migrations.length + 1;
   function migrate(prev, version) {
     if (!migrations || version === currentVersion) {
@@ -16,8 +16,13 @@ function createModel(modelName, getId, storageEngine, methods = {}, migrations =
     return cur;
   }
   return {
-    ...methods,
-    ...storageEngine(modelName, currentVersion, getId, migrate),
+    ...utilityMethods,
+    ...storageEngine({
+      modelName,
+      modelVersion: currentVersion,
+      getId,
+      migrate
+    }),
     create(obj) {
       return {
         ...obj,
@@ -26,11 +31,13 @@ function createModel(modelName, getId, storageEngine, methods = {}, migrations =
     }
   };
 }
-function createStorageEngine(engine) {
-  return engine;
-}
 // src/storageEngines/localStorage.ts
-var localStorageEngine = createStorageEngine((modelName, modelVersion, getId, migrate) => {
+function localStorageEngine({
+  modelName,
+  modelVersion,
+  getId,
+  migrate
+}) {
   return {
     get(...ids) {
       return ids.map((rawId) => {
@@ -54,9 +61,14 @@ var localStorageEngine = createStorageEngine((modelName, modelVersion, getId, mi
       });
     }
   };
-});
+}
 // src/storageEngines/inMemory.ts
-var inMemoryStorageEngine = createStorageEngine((modelName, modelVersion, getId, migrate) => {
+function inMemoryStorageEngine({
+  modelName,
+  modelVersion,
+  getId,
+  migrate
+}) {
   const storage = {};
   return {
     get(rawId) {
@@ -79,10 +91,9 @@ var inMemoryStorageEngine = createStorageEngine((modelName, modelVersion, getId,
       });
     }
   };
-});
+}
 export {
   localStorageEngine,
   inMemoryStorageEngine,
-  createStorageEngine,
   createModel
 };
