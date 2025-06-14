@@ -28,7 +28,7 @@ These are the core ideas behind it:
 
 - Your schemas are defined as regular typescript types.
 - You can update your types at any time by providing a migration, which is just a plain typescript function that updates an object from the previous version to the new one.
-- Migrations are applied at retrieval time. This abstracts away an entire class of complexity by not having to worry about syncing your app and databases. It also allows you to store data in places the user controls, such as their browser's `localStorage`.
+- Migrations are applied at retrieval time. This abstracts away an entire class of complexity by not having to worry about syncing your app with its database(s). It also allows you to store data in mediums owned by the user, such as their browser's `localStorage` (where you can't apply migrations arbitrarily).
 - Storage and retrieval logic is abstracted into storage engines, which are just functions that return a collection of methods, with no restrictions - like `get()` and `save()`.
 
 You may notice TinyORM is light on constraints. You're not supposed to know what your schema or your storage logic is going to look like. The goal is to give you a simple paradigm that you can build with, starting from a simple foundation.
