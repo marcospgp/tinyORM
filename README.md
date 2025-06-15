@@ -9,15 +9,15 @@ TinyORM's [core](./src/tinyORM.ts) will never exceed 100 lines of zero-dependenc
 ## Install
 
 ```shell
-npm i @hesoyam.zip/tiny-orm
+npm i @marcospgp/tiny-orm
 ```
 
 ```shell
-bun add @hesoyam.zip/tiny-orm
+bun add @marcospgp/tiny-orm
 ```
 
 ```shell
-pnpm add @hesoyam.zip/tiny-orm
+pnpm add @marcospgp/tiny-orm
 ```
 
 ## What is TinyORM?
