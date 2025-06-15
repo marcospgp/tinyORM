@@ -1,6 +1,6 @@
 # tinyORM
 
-[![npm version](https://badge.fury.io/js/@hesoyam.zip%2Ftiny-orm.svg)](https://www.npmjs.com/package/@hesoyam.zip/tiny-orm)
+[![npm version](https://badge.fury.io/js/@marcospgp%2Ftiny-orm.svg)](https://www.npmjs.com/package/@marcospgp/tiny-orm)
 
 A minimal typescript storage layer radically optimized toward development speed.
 
