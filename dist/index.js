@@ -22,13 +22,7 @@ function createModel(modelName, getId, storageEngine, utilityMethods = {}, migra
       modelVersion: currentVersion,
       getId,
       migrate
-    }),
-    create(obj) {
-      return {
-        ...obj,
-        __tinyorm_model_version: currentVersion
-      };
-    }
+    })
   };
 }
 // src/storageEngines/localStorage.ts

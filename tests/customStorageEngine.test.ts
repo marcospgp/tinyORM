@@ -78,7 +78,7 @@ test("Building a custom storage engine.", () => {
   };
 
   // And a model that uses that type and our custom engine:
-  const timestampedUser = createModel(
+  const timestampedUserModel = createModel(
     "user",
     (x: User) => x.username,
     timestampedStorageEngine
@@ -86,14 +86,14 @@ test("Building a custom storage engine.", () => {
 
   const startingTimestamp = new Date(1990, 0, 1).toISOString();
 
-  timestampedUser.save({
+  timestampedUserModel.save({
     username: "hunter2",
     email: "hunter2@example.com",
     created_at: startingTimestamp,
     updated_at: startingTimestamp,
   });
 
-  const storedUser = timestampedUser.get("hunter2");
+  const storedUser = timestampedUserModel.get("hunter2");
 
   expect(storedUser.updated_at).not.toBe(startingTimestamp);
 });

@@ -42,7 +42,7 @@ test("Defining the first type.", () => {
 
   // We can also add helper methods to our models.
   // Let's create a new model for our User type with a helper method:
-  const userModel2 = createModel(
+  const user2Model = createModel(
     "user",
     (user: User) => user.username,
     inMemoryStorageEngine,
@@ -58,7 +58,7 @@ test("Defining the first type.", () => {
   // Models expose type hints correctly for both utility methods and the methods
   // exposed by the specified storage engine, so your editor should be able to
   // show you what's available.
-  const domain = userModel2.getEmailDomain(user);
+  const domain = user2Model.getEmailDomain(user);
 
   expect(domain).toBe("example.com");
 });

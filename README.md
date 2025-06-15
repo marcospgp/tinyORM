@@ -38,6 +38,7 @@ To get started with TinyORM, check out the following examples:
 1. [Specify your first type](./tests/firstType.test.ts)
 2. [Update your type and specify a migration](./tests/firstMigration.test.ts)
 3. [Create a custom storage engine](./tests/customStorageEngine.test.ts)
+4. [Create a higher level storage engine](./tests/higherLevelStorageEngine.ts)
 
 You may have noticed these examples are actually the test suite for this project.
 
@@ -53,13 +54,21 @@ Some reasons you may want to write a custom storage engine could be:
 - Pre or post processing your objects, such as updating an `updated_at`
   timestamp before saving. Storage engines can constrain the types they handle to include certain fields.
 
+### Higher level storage engines
+
+You can write storage engines that take any kind of extra information by wrapping them in a function.
+
+Storage engines are already a function, so this means it will be a function returning a function (the actual storage engine).
+
+You can then simply call your higher-level storage engine, passing in the intended values, in turn passing the result to your models.
+
 ## Type validation
 
 TinyORM is based on typescript and thus doesn't enforce type validation at runtime.
 
 You can use an existing library for this functionality, such as `zod`.
 
-Like other kinds of data pre-processing, it should be implemented at the storage engine level. You can write a custom storage engine with a wrapping function that takes in whatever it needs, then call it and pass the result to your model.
+Like other kinds of data pre-processing, it should be implemented at the storage engine level. You can write a custom storage engine with a wrapping function that takes in whatever it needs, then call it and pass the resultto your model.
 
 ## Tradeoffs
 
@@ -113,6 +122,8 @@ To get started, simply run `bun install`.
 
 To build for production, run `bun run build`. Add `--watch` to watch for changes.
 
+To run tests, run `bun test`. Note tests rely on the built package, so you'll have to run `bun run build:noTest` after making any changes to see them reflected in the tests.
+
 To work on this package while using it in a project, you can link it as a dependency:
 
 ```shell
@@ -124,4 +135,4 @@ cd /path/to/other/project
 bun link @hesoyam.zip/tiny-orm
 ```
 
-To publish a new version of the package to npm, bump the version in `package.json` and run `bun publish`. This will run the `prepublishOnly` script before publishing, which builds the library into `./dist/`.
+To publish a new version of the package to npm, bump the version in `package.json` and run `bun publish`. This will run the `prepublishOnly` script before publishing.

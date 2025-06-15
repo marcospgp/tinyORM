@@ -5,16 +5,16 @@ type Migration<From extends Dict, To extends Dict> = (obj: From) => To;
 export function createModel<
   T extends Dict, // Model type
   S extends FunctionDict, // Storage engine return type
-  M extends FunctionDict // Utility methods type
+  M extends FunctionDict = {} // Utility methods type
 >(
   modelName: string,
   // Model type (T) is inferred by callers type annotating it into a specific
   // type here. Otherwise, it defaults to Dict.
   getId: (obj: T) => string,
-  storageEngine: StorageEngine<T, S>,
+  storageEngine: (params: StorageEngineParams<T>) => S,
   utilityMethods: M = {} as M,
   migrations: Migration<any, any>[] = []
-): M & S & { create(obj: T): T } {
+) {
   const currentVersion = migrations.length + 1;
 
   // migrate() is a helper function passed to the storage engine.
@@ -48,12 +48,6 @@ export function createModel<
       getId,
       migrate,
     }),
-    create(obj: T): T {
-      return {
-        ...obj,
-        __tinyorm_model_version: currentVersion,
-      };
-    },
   };
 }
 
@@ -63,7 +57,3 @@ export type StorageEngineParams<T extends Dict> = {
   getId: (obj: T) => string;
   migrate: (prev: Dict, version: number) => T;
 };
-
-type StorageEngine<T extends Dict, R extends FunctionDict> = (
-  params: StorageEngineParams<T>
-) => R;
