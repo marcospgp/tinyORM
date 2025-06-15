@@ -40,8 +40,8 @@ test("Building a custom storage engine.", () => {
     email: string;
   };
 
-  // To get a valid storage engine, we simply call the wrapping function,
-  // passing in the intended values.
+  // To get a valid storage engine we simply call the wrapping function, passing
+  // in the intended values.
   const userEngine = createValidatingStorageEngine(
     (user: User) => user.username !== ""
   );
