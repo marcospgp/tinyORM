@@ -68,7 +68,7 @@ TinyORM is based on typescript and thus doesn't enforce type validation at runti
 
 You can use an existing library for this functionality, such as `zod`.
 
-Like other kinds of data pre-processing, it should be implemented at the storage engine level. You can write a custom storage engine with a wrapping function that takes in whatever it needs, then call it and pass the resultto your model.
+Like other kinds of data pre-processing, it should be implemented at the storage engine level. You can write a custom storage engine with a wrapping function that takes in whatever it needs, then call it and pass the result to your model.
 
 ## Tradeoffs
 
