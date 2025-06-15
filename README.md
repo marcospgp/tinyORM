@@ -53,6 +53,14 @@ Some reasons you may want to write a custom storage engine could be:
 - Pre or post processing your objects, such as updating an `updated_at`
   timestamp before saving. Storage engines can constrain the types they handle to include certain fields.
 
+## Type validation
+
+TinyORM is based on typescript and thus doesn't enforce type validation at runtime.
+
+You can use an existing library for this functionality, such as `zod`.
+
+Like other kinds of data pre-processing, it should be implemented at the storage engine level. You can write a custom storage engine with a wrapping function that takes in whatever it needs, then call it and pass the result to your model.
+
 ## Tradeoffs
 
 Everything in computer science has tradeoffs, and TinyORM is no exception. These are the ones we get by radically optimizing for simplicity and development speed.
