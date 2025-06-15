@@ -1,4 +1,4 @@
-import { createModel, inMemoryStorageEngine } from "dist";
+import { createModel, inMemoryStorageEngine } from "../dist";
 import { test } from "bun:test";
 
 test("Writing the first migration.", () => {

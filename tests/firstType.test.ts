@@ -1,4 +1,4 @@
-import { createModel, inMemoryStorageEngine } from "dist";
+import { createModel, inMemoryStorageEngine } from "../dist";
 import { expect, test } from "bun:test";
 
 test("Defining the first type.", () => {

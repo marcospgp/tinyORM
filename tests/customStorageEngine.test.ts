@@ -1,4 +1,8 @@
-import { createModel, inMemoryStorageEngine, StorageEngineParams } from "dist";
+import {
+  createModel,
+  inMemoryStorageEngine,
+  StorageEngineParams,
+} from "../dist";
 import { expect, test } from "bun:test";
 
 test("Building a custom storage engine.", () => {

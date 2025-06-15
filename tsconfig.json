@@ -11,13 +11,15 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "noEmit": true
 
     // Allow using @ to represent src folder.
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    // This is commented out because unlike bun, tsc does not rewrite imports,
+    // and we use it to generate ".d.ts" files (as bun doesn't support that).
+    // "baseUrl": ".",
+    // "paths": {
+    //   "@/*": ["src/*"]
+    // }
   },
   "exclude": ["dist", "node_modules"]
 }

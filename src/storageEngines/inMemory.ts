@@ -1,4 +1,4 @@
-import { StorageEngineParams } from "@/tinyORM";
+import { StorageEngineParams } from "../tinyORM";
 
 type Dict = Record<string, any>;
 
