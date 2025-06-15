@@ -1,7 +1,7 @@
 {
   "name": "@marcospgp/tiny-orm",
   "description": "A minimal storage layer radically optimized toward development speed.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "repository": "https://github.com/marcospgp/tinyORM",
   "license": "MIT",
   "main": "dist/index.js",
