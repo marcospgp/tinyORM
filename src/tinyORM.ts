@@ -8,6 +8,8 @@ export function createModel<
   M extends FunctionDict // Utility methods type
 >(
   modelName: string,
+  // Model type (T) is inferred by callers type annotating it into a specific
+  // type here. Otherwise, it defaults to Dict.
   getId: (obj: T) => string,
   storageEngine: StorageEngine<T, S>,
   utilityMethods: M = {} as M,
