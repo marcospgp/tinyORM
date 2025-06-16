@@ -1,7 +1,7 @@
 import {
   createModel,
   inMemoryStorageEngine,
-  StorageEngineParams,
+  type StorageEngineParams,
 } from "../dist";
 import { expect, test } from "bun:test";
 
