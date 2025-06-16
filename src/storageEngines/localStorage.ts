@@ -52,6 +52,10 @@ export function localStorageEngine<T extends Dict>({
     getStrict(...ids: string[]): T[] {
       const stored = getStored();
 
+      if (ids.length === 0) {
+        ids = Object.keys(stored);
+      }
+
       return ids.map((id) => {
         const obj = stored[id];
 

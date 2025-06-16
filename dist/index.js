@@ -59,6 +59,9 @@ function localStorageEngine({
     },
     getStrict(...ids) {
       const stored = getStored();
+      if (ids.length === 0) {
+        ids = Object.keys(stored);
+      }
       return ids.map((id) => {
         const obj = stored[id];
         if (!obj) {
