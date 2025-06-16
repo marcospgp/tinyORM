@@ -36,8 +36,8 @@ test("Building a custom storage engine.", () => {
 
   // We specify Timestamped as a constraint on the generic type. The minimum
   // constraint is Record<string, any>.
-  // The storage engine receives a StorageEngineParams<T> object from the model that
-  // is going to use it.
+  // The storage engine receives a StorageEngineParams<T> object from the model
+  // that is going to use it.
   function timestampedStorageEngine<T extends Timestamped>({
     // The name of the model that is trying to use this storage engine.
     modelName,

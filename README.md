@@ -38,9 +38,9 @@ To get started with TinyORM, check out the following examples:
 1. [Specify your first type](./tests/firstType.test.ts)
 2. [Update your type and specify a migration](./tests/firstMigration.test.ts)
 3. [Create a custom storage engine](./tests/customStorageEngine.test.ts)
-4. [Create a higher level storage engine](./tests/higherLevelStorageEngine.ts)
+4. [Create a higher level storage engine](./tests/higherLevelStorageEngine.test.ts)
 
-You may have noticed these examples are actually the test suite for this project.
+These examples are actually test files, which get run before every release - ensuring the code is always up to date.
 
 TinyORM's codebase is written to be simple and readable. You shouldn't be afraid to jump into the code and see what's going on for yourself!
 
