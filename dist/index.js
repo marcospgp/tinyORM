@@ -19,7 +19,7 @@ function createModel(modelName, getId, storageEngine, utilityMethods = {}, migra
     ...utilityMethods,
     ...storageEngine({
       modelName,
-      modelVersion: currentVersion,
+      currentVersion,
       getId,
       migrate
     })
@@ -28,30 +28,43 @@ function createModel(modelName, getId, storageEngine, utilityMethods = {}, migra
 // src/storageEngines/localStorage.ts
 function localStorageEngine({
   modelName,
-  modelVersion,
+  currentVersion,
   getId,
   migrate
 }) {
+  const getStored = () => JSON.parse(localStorage.getItem(modelName) ?? "{}");
   return {
+    save(...objs) {
+      const stored = getStored();
+      objs.forEach((x) => {
+        stored[getId(x)] = {
+          modelVersion: currentVersion,
+          object: x
+        };
+      });
+      localStorage.setItem(modelName, JSON.stringify(stored));
+    },
     get(...ids) {
-      return ids.map((rawId) => {
-        const id = `${modelName}-${rawId}`;
-        const item = localStorage.getItem(id);
-        if (!item) {
-          throw new Error(`Item with ID "${id}" not found.`);
+      const stored = getStored();
+      if (ids.length === 0) {
+        ids = Object.keys(stored);
+      }
+      return ids.map((id) => {
+        const obj = stored[id];
+        if (!obj) {
+          return null;
         }
-        const obj = JSON.parse(item);
         return migrate(obj.object, obj.modelVersion);
       });
     },
-    save(...objs) {
-      objs.forEach((x) => {
-        const store = {
-          modelName,
-          modelVersion,
-          object: x
-        };
-        localStorage.setItem(`${modelName}-${getId(x)}`, JSON.stringify(store));
+    getStrict(...ids) {
+      const stored = getStored();
+      return ids.map((id) => {
+        const obj = stored[id];
+        if (!obj) {
+          throw Error(`Object of model "${modelName}" with ID "${id}" not found in localStorage!`);
+        }
+        return migrate(obj.object, obj.modelVersion);
       });
     }
   };
@@ -59,14 +72,13 @@ function localStorageEngine({
 // src/storageEngines/inMemory.ts
 function inMemoryStorageEngine({
   modelName,
-  modelVersion,
+  currentVersion,
   getId,
   migrate
 }) {
   const storage = {};
   return {
-    get(rawId) {
-      const id = `${modelName}-${rawId}`;
+    get(id) {
       const obj = storage[id];
       if (!obj) {
         throw new Error(`Item with ID "${id}" not found.`);
@@ -75,13 +87,11 @@ function inMemoryStorageEngine({
     },
     save(...objs) {
       objs.forEach((x) => {
-        const store = {
+        storage[getId(x)] = {
           modelName,
-          modelVersion,
+          modelVersion: currentVersion,
           object: x
         };
-        const id = `${modelName}-${getId(x)}`;
-        storage[id] = store;
       });
     }
   };

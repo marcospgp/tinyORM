@@ -54,6 +54,8 @@ Some reasons you may want to write a custom storage engine could be:
 - Pre or post processing your objects, such as updating an `updated_at` timestamp before saving.
 - Introducing custom querying functionality. A storage engine can rely on and query against any fields that it constrains models using it to include.
 
+The included storage engines should be a good reference when writing a custom one.
+
 ### Higher level storage engines
 
 You can write storage engines that take any kind of extra information by wrapping them in a function.

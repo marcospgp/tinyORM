@@ -4,22 +4,21 @@ type Dict = Record<string, any>;
 
 export function inMemoryStorageEngine<T extends Dict>({
   modelName,
-  modelVersion,
+  currentVersion,
   getId,
   migrate,
 }: StorageEngineParams<T>) {
-  type Stored = {
-    modelName: string;
-    modelVersion: number;
-    object: Dict;
-  };
-
-  const storage: Record<string, Stored> = {};
+  const storage: Record<
+    string,
+    {
+      modelName: string;
+      modelVersion: number;
+      object: Dict;
+    }
+  > = {};
 
   return {
-    get(rawId: string) {
-      const id = `${modelName}-${rawId}`;
-
+    get(id: string) {
       const obj = storage[id];
 
       if (!obj) {
@@ -30,15 +29,11 @@ export function inMemoryStorageEngine<T extends Dict>({
     },
     save(...objs: T[]) {
       objs.forEach((x) => {
-        const store: Stored = {
+        storage[getId(x)] = {
           modelName,
-          modelVersion,
+          modelVersion: currentVersion,
           object: x,
         };
-
-        const id = `${modelName}-${getId(x)}`;
-
-        storage[id] = store;
       });
     },
   };

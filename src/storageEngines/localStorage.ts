@@ -4,40 +4,64 @@ type Dict = Record<string, any>;
 
 export function localStorageEngine<T extends Dict>({
   modelName,
-  modelVersion,
+  currentVersion,
   getId,
   migrate,
 }: StorageEngineParams<T>) {
-  type Stored = {
-    modelName: string;
-    modelVersion: number;
-    object: Dict;
-  };
+  type Stored = Record<
+    string,
+    {
+      modelVersion: number;
+      object: Dict;
+    }
+  >;
+
+  const getStored = () =>
+    JSON.parse(localStorage.getItem(modelName) ?? "{}") as Stored;
 
   return {
-    get(...ids: string[]) {
-      return ids.map((rawId) => {
-        const id = `${modelName}-${rawId}`;
+    save(...objs: T[]) {
+      const stored = getStored();
 
-        const item = localStorage.getItem(id);
+      objs.forEach((x) => {
+        stored[getId(x)] = {
+          modelVersion: currentVersion,
+          object: x,
+        };
+      });
 
-        if (!item) {
-          throw new Error(`Item with ID "${id}" not found.`);
+      localStorage.setItem(modelName, JSON.stringify(stored));
+    },
+    get(...ids: string[]): (T | null)[] {
+      const stored = getStored();
+
+      if (ids.length === 0) {
+        ids = Object.keys(stored);
+      }
+
+      return ids.map((id) => {
+        const obj = stored[id];
+
+        if (!obj) {
+          return null;
         }
-
-        const obj = JSON.parse(item) as Stored;
 
         return migrate(obj.object, obj.modelVersion);
       });
     },
-    save(...objs: T[]) {
-      objs.forEach((x) => {
-        const store: Stored = {
-          modelName,
-          modelVersion,
-          object: x,
-        };
-        localStorage.setItem(`${modelName}-${getId(x)}`, JSON.stringify(store));
+    getStrict(...ids: string[]): T[] {
+      const stored = getStored();
+
+      return ids.map((id) => {
+        const obj = stored[id];
+
+        if (!obj) {
+          throw Error(
+            `Object of model "${modelName}" with ID "${id}" not found in localStorage!`
+          );
+        }
+
+        return migrate(obj.object, obj.modelVersion);
       });
     },
   };

@@ -31,8 +31,10 @@ test("Building a custom storage engine.", () => {
   // A storage engine is just a generic function that can be passed into a
   // model, which then calls it with some model-specific parameters and appends
   // the resulting set of methods to itself.
-  // There are no restrictions on what the methods returned by a storage engine
-  // look like.
+  // When a model uses a storage engine, type T is set to the same type used
+  // by the objects of that model.
+  // A storage engine should always use the type T to annotate received and
+  // returned objects of the model's type.
 
   // We specify Timestamped as a constraint on the generic type. The minimum
   // constraint is Record<string, any>.
@@ -50,6 +52,9 @@ test("Building a custom storage engine.", () => {
     // compatible with type T.
     // A storage engine must always call this function before returning any
     // data.
+    // We don't call it in this example as we just rely on the in-memory storage
+    // engine, but check out the source code for the included storage engines
+    // to see how they work!
     migrate,
   }: StorageEngineParams<T>) {
     // This storage engine will actually rely on an existing one to store its
@@ -62,9 +67,13 @@ test("Building a custom storage engine.", () => {
       migrate,
     });
 
+    // There are no restrictions on what the methods returned by a storage engine
+    // look like.
     return {
       ...engine,
       save(...objs: T[]) {
+        // This engine just updates the "updated_at" timestamp before letting
+        // the in-memory storage engine save the data.
         engine.save(
           ...objs.map((x) => ({ ...x, updated_at: new Date().toISOString() }))
         );

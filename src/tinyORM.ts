@@ -44,7 +44,7 @@ export function createModel<
     ...utilityMethods,
     ...storageEngine({
       modelName,
-      modelVersion: currentVersion,
+      currentVersion,
       getId,
       migrate,
     }),
@@ -53,7 +53,7 @@ export function createModel<
 
 export type StorageEngineParams<T extends Dict> = {
   modelName: string;
-  modelVersion: number;
+  currentVersion: number;
   getId: (obj: T) => string;
   migrate: (prev: Dict, version: number) => T;
 };

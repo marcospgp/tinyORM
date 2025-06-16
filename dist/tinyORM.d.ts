@@ -6,7 +6,7 @@ S extends FunctionDict, // Storage engine return type
 M extends FunctionDict>(modelName: string, getId: (obj: T) => string, storageEngine: (params: StorageEngineParams<T>) => S, utilityMethods?: M, migrations?: Migration<any, any>[]): M & S;
 export type StorageEngineParams<T extends Dict> = {
     modelName: string;
-    modelVersion: number;
+    currentVersion: number;
     getId: (obj: T) => string;
     migrate: (prev: Dict, version: number) => T;
 };
