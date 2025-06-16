@@ -1,4 +1,4 @@
-import { type type StorageEngineParams } from"../dist";
+import { type StorageEngineParams } from "../dist";
 import { expect, test } from "bun:test";
 import { createModel } from "../src";
 
