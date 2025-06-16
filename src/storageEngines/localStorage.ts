@@ -32,6 +32,11 @@ export function localStorageEngine<T extends Dict>({
 
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
+    /**
+     * Get items by ID.
+     * If no IDs provided, returns all items.
+     * Missing items are set to null in result.
+     */
     get(...ids: string[]): (T | null)[] {
       const stored = getStored();
 
@@ -49,6 +54,11 @@ export function localStorageEngine<T extends Dict>({
         return migrate(obj.object, obj.modelVersion);
       });
     },
+    /**
+     * Get items by ID.
+     * If no IDs provided, returns all items.
+     * Throws if an item is missing.
+     */
     getStrict(...ids: string[]): T[] {
       const stored = getStored();
 
