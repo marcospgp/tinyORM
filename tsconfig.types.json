@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "exclude": ["dist", "node_modules", "./tests/**/*"],
+  "include": ["./src/**/*"],
   "compilerOptions": {
     "noEmit": false,
     "declaration": true
