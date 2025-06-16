@@ -8,11 +8,15 @@ import { expect, test } from "bun:test";
 test("Building a custom storage engine.", () => {
   // One of the main strengths of TinyORM is that it is database agnostic.
   // You can write a custom storage engine for any storage medium, or even one
-  // that mixes together other existing storage engines.
-  // A storage engine can also simply add functionality on top of a single storage
-  // medium.
-  // For this example, we will enforce "created_at" and "updated_at" timestamps
-  // in our objects.
+  // that mixes together other storage engines.
+  // For this example, we will write a storage engine that enforces "created_at"
+  // and "updated_at" timestamps in stored objects.
+  // Enforcing the presence of certain fields makes it possible for a storage
+  // engine to query against them (even though we won't do that in this
+  // example).
+  // You should always enforce timestamps, even if won't need to query against
+  // them immediately - you can't change a storage engine's type constraint
+  // later, as it can cause issues when retrieving previously stored data.
 
   // We start by creating a type that encodes the assumptions we want to be able
   // to make about our objects.
@@ -24,15 +28,16 @@ test("Building a custom storage engine.", () => {
   };
 
   // We then create our storage engine.
-  // A storage engine is just a generic function that receives some data from
-  // the model that is using it and returns a set of methods that will be
-  // exposed in the model.
-  // There are no restrictions on what these methods look like.
+  // A storage engine is just a generic function that can be passed into a
+  // model, which then calls it with some model-specific parameters and appends
+  // the resulting set of methods to itself.
+  // There are no restrictions on what the methods returned by a storage engine
+  // look like.
 
-  // Note that we use the Timestamped type as a constraint on the generic
-  // parameter.
-  // If we wanted to specify no constraints we could use Record<string, any>
-  // instead.
+  // We specify Timestamped as a constraint on the generic type. The minimum
+  // constraint is Record<string, any>.
+  // The storage engine receives a StorageEngineParams<T> object from the model that
+  // is going to use it.
   function timestampedStorageEngine<T extends Timestamped>({
     // The name of the model that is trying to use this storage engine.
     modelName,
