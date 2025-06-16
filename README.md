@@ -51,8 +51,8 @@ TinyORM ships with these [storage engines](./src/storageEngines), but you can wr
 Some reasons you may want to write a custom storage engine could be:
 
 - Using more than one storage medium, such as the browser's `localStorage` for logged out users and a cloud database for logged in users.
-- Pre or post processing your objects, such as updating an `updated_at`
-  timestamp before saving. Storage engines can constrain the types they handle to include certain fields.
+- Pre or post processing your objects, such as updating an `updated_at` timestamp before saving.
+- Introducing custom querying functionality. A storage engine can rely on and query against any fields that it constrains models using it to include.
 
 ### Higher level storage engines
 
