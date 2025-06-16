@@ -5,7 +5,7 @@ type Migration<From extends Dict, To extends Dict> = (obj: From) => To;
 export function createModel<
   T extends Dict, // Model type
   S extends FunctionDict, // Storage engine return type
-  M extends FunctionDict = {} // Utility methods type
+  M extends FunctionDict // Utility methods type
 >(
   modelName: string,
   // Model type (T) is inferred by callers type annotating it into a specific
