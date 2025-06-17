@@ -26,6 +26,9 @@ function createModel(modelName, getId, storageEngine, utilityMethods = {}, migra
   };
 }
 // src/storageEngines/localStorage.ts
+function tupleMap(tuple, map) {
+  return tuple.map(map);
+}
 function localStorageEngine({
   modelName,
   currentVersion,
@@ -44,25 +47,22 @@ function localStorageEngine({
       });
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
+    getAll() {
+      const stored = getStored();
+      return Object.values(stored).map((x) => migrate(x.object, x.modelVersion));
+    },
     get(...ids) {
       const stored = getStored();
-      if (ids.length === 0) {
-        ids = Object.keys(stored);
-      }
-      return ids.map((id) => {
+      return tupleMap(ids, (id) => {
         const obj = stored[id];
-        if (!obj) {
+        if (!obj)
           return null;
-        }
         return migrate(obj.object, obj.modelVersion);
       });
     },
     getStrict(...ids) {
       const stored = getStored();
-      if (ids.length === 0) {
-        ids = Object.keys(stored);
-      }
-      return ids.map((id) => {
+      return tupleMap(ids, (id) => {
         const obj = stored[id];
         if (!obj) {
           throw Error(`Object of model "${modelName}" with ID "${id}" not found in localStorage!`);

@@ -2,6 +2,13 @@ import { type StorageEngineParams } from "../tinyORM";
 
 type Dict = Record<string, any>;
 
+function tupleMap<Tuple extends readonly unknown[], Result>(
+  tuple: Tuple,
+  map: (item: Tuple[number]) => Result
+) {
+  return tuple.map(map) as { [K in keyof Tuple]: Result };
+}
+
 export function localStorageEngine<T extends Dict>({
   modelName,
   currentVersion,
@@ -32,41 +39,41 @@ export function localStorageEngine<T extends Dict>({
 
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
-    /**
-     * Get items by ID.
-     * If no IDs provided, returns all items.
-     * Missing items are set to null in result.
-     */
-    get(...ids: string[]): (T | null)[] {
+    /** Get all items. */
+    getAll(): T[] {
       const stored = getStored();
 
-      if (ids.length === 0) {
-        ids = Object.keys(stored);
-      }
+      return Object.values(stored).map((x) =>
+        migrate(x.object, x.modelVersion)
+      );
+    },
+    /**
+     * Get items by ID.
+     * Missing items are set to null in result.
+     */
+    get<Ids extends readonly string[]>(
+      ...ids: Ids
+    ): { [K in keyof Ids]: T | null } {
+      const stored = getStored();
 
-      return ids.map((id) => {
+      return tupleMap(ids, (id) => {
         const obj = stored[id];
 
-        if (!obj) {
-          return null;
-        }
+        if (!obj) return null;
 
         return migrate(obj.object, obj.modelVersion);
       });
     },
     /**
      * Get items by ID.
-     * If no IDs provided, returns all items.
      * Throws if an item is missing.
      */
-    getStrict(...ids: string[]): T[] {
+    getStrict<Ids extends readonly string[]>(
+      ...ids: Ids
+    ): { [K in keyof Ids]: T } {
       const stored = getStored();
 
-      if (ids.length === 0) {
-        ids = Object.keys(stored);
-      }
-
-      return ids.map((id) => {
+      return tupleMap(ids, (id) => {
         const obj = stored[id];
 
         if (!obj) {
