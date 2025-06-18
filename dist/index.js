@@ -37,7 +37,7 @@ function localStorageEngine({
 }) {
   const getStored = () => JSON.parse(localStorage.getItem(modelName) ?? "{}");
   return {
-    save(...objs) {
+    save: (...objs) => {
       const stored = getStored();
       objs.forEach((x) => {
         stored[getId(x)] = {
@@ -47,11 +47,11 @@ function localStorageEngine({
       });
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
-    getAll() {
+    getAll: () => {
       const stored = getStored();
       return Object.values(stored).map((x) => migrate(x.object, x.modelVersion));
     },
-    get(...ids) {
+    get: (...ids) => {
       const stored = getStored();
       return tupleMap(ids, (id) => {
         const obj = stored[id];
@@ -60,7 +60,7 @@ function localStorageEngine({
         return migrate(obj.object, obj.modelVersion);
       });
     },
-    getStrict(...ids) {
+    getStrict: (...ids) => {
       const stored = getStored();
       return tupleMap(ids, (id) => {
         const obj = stored[id];
@@ -81,14 +81,14 @@ function inMemoryStorageEngine({
 }) {
   const storage = {};
   return {
-    get(id) {
+    get: (id) => {
       const obj = storage[id];
       if (!obj) {
         throw new Error(`Item with ID "${id}" not found.`);
       }
       return migrate(obj.object, obj.modelVersion);
     },
-    save(...objs) {
+    save: (...objs) => {
       objs.forEach((x) => {
         storage[getId(x)] = {
           modelName,

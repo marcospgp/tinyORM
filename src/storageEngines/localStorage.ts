@@ -27,7 +27,7 @@ export function localStorageEngine<T extends Dict>({
     JSON.parse(localStorage.getItem(modelName) ?? "{}") as Stored;
 
   return {
-    save(...objs: T[]) {
+    save: (...objs: T[]) => {
       const stored = getStored();
 
       objs.forEach((x) => {
@@ -40,7 +40,7 @@ export function localStorageEngine<T extends Dict>({
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
     /** Get all items. */
-    getAll(): T[] {
+    getAll: (): T[] => {
       const stored = getStored();
 
       return Object.values(stored).map((x) =>
@@ -51,9 +51,9 @@ export function localStorageEngine<T extends Dict>({
      * Get items by ID.
      * Missing items are set to null in result.
      */
-    get<Ids extends readonly string[]>(
+    get: <Ids extends readonly string[]>(
       ...ids: Ids
-    ): { [K in keyof Ids]: T | null } {
+    ): { [K in keyof Ids]: T | null } => {
       const stored = getStored();
 
       return tupleMap(ids, (id) => {
@@ -68,9 +68,9 @@ export function localStorageEngine<T extends Dict>({
      * Get items by ID.
      * Throws if an item is missing.
      */
-    getStrict<Ids extends readonly string[]>(
+    getStrict: <Ids extends readonly string[]>(
       ...ids: Ids
-    ): { [K in keyof Ids]: T } {
+    ): { [K in keyof Ids]: T } => {
       const stored = getStored();
 
       return tupleMap(ids, (id) => {

@@ -18,7 +18,7 @@ export function inMemoryStorageEngine<T extends Dict>({
   > = {};
 
   return {
-    get(id: string) {
+    get: (id: string) => {
       const obj = storage[id];
 
       if (!obj) {
@@ -27,7 +27,7 @@ export function inMemoryStorageEngine<T extends Dict>({
 
       return migrate(obj.object, obj.modelVersion);
     },
-    save(...objs: T[]) {
+    save: (...objs: T[]) => {
       objs.forEach((x) => {
         storage[getId(x)] = {
           modelName,
