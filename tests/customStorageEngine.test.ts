@@ -9,8 +9,8 @@ test("Building a custom storage engine.", () => {
   // One of the main strengths of TinyORM is that it is database agnostic.
   // You can write a custom storage engine for any storage medium, or even one
   // that mixes together other storage engines.
-  // For this example, we will write a storage engine that enforces "created_at"
-  // and "updated_at" timestamps in stored objects.
+  // For this example, we will write a storage engine that enforces "createdAt"
+  // and "updatedAt" timestamps in stored objects.
   // Enforcing the presence of certain fields makes it possible for a storage
   // engine to query against them (even though we won't do that in this
   // example).
@@ -22,9 +22,9 @@ test("Building a custom storage engine.", () => {
   // to make about our objects.
   type Timestamped = {
     /** ISO timestamp. */
-    created_at: string;
+    createdAt: string;
     /** ISO timestamp. */
-    updated_at: string;
+    updatedAt: string;
   };
 
   // We then create our storage engine.
@@ -44,7 +44,7 @@ test("Building a custom storage engine.", () => {
     // The name of the model that is trying to use this storage engine.
     modelName,
     // The current version of that model.
-    modelVersion,
+    currentVersion,
     // A function that returns a unique ID given an object of type T (our
     // generic parameter).
     getId,
@@ -62,7 +62,7 @@ test("Building a custom storage engine.", () => {
     // It just adds some functionality on top of it.
     const engine = inMemoryStorageEngine({
       modelName,
-      modelVersion,
+      currentVersion,
       getId,
       migrate,
     });
@@ -72,10 +72,10 @@ test("Building a custom storage engine.", () => {
     return {
       ...engine,
       save(...objs: T[]) {
-        // This engine just updates the "updated_at" timestamp before letting
+        // This engine just updates the "updatedAt" timestamp before letting
         // the in-memory storage engine save the data.
         engine.save(
-          ...objs.map((x) => ({ ...x, updated_at: new Date().toISOString() }))
+          ...objs.map((x) => ({ ...x, updatedAt: new Date().toISOString() }))
         );
       },
     };
@@ -87,8 +87,8 @@ test("Building a custom storage engine.", () => {
     email: string;
     // Note that if we remove these fields, our model definition will error
     // below - because this type will not meet the storage engine's constraint.
-    created_at: string;
-    updated_at: string;
+    createdAt: string;
+    updatedAt: string;
   };
 
   // And a model that uses that type and our custom engine:
@@ -103,11 +103,11 @@ test("Building a custom storage engine.", () => {
   timestampedUserModel.save({
     username: "hunter2",
     email: "hunter2@example.com",
-    created_at: startingTimestamp,
-    updated_at: startingTimestamp,
+    createdAt: startingTimestamp,
+    updatedAt: startingTimestamp,
   });
 
   const storedUser = timestampedUserModel.get("hunter2");
 
-  expect(storedUser.updated_at).not.toBe(startingTimestamp);
+  expect(storedUser.updatedAt).not.toBe(startingTimestamp);
 });

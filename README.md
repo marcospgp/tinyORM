@@ -84,7 +84,7 @@ It also means you don't have to control every database you store data on, so you
 
 A downside is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
 
-Another downside is that your stored data isn't guaranteed to be in the latest format. You can still make assumptions on it, such as assuming it has a `created_at` field for time-based querying, but your storage engine must enforce this assumption by constraining its generic type parameter (with something like `T extends Timestamped`).
+Another downside is that your stored data isn't guaranteed to be in the latest format. You can still make assumptions on it, such as assuming it has a `createdAt` field for time-based querying, but your storage engine must enforce this assumption by constraining its generic type parameter (with something like `T extends Timestamped`).
 
 ### Storage engines
 
