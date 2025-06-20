@@ -9,9 +9,15 @@ function createModel(modelName, getId, storageEngine, utilityMethods = {}, migra
     for (let i = version - 1;i < migrations.length; i++) {
       const migration = migrations[i];
       if (!migration) {
-        throw Error(`No migration from version ${i + 1} to version ${i + 2} found.`);
+        throw Error(`No migration from version ${i + 1} to version ${i + 2} of model ${modelName} found.`);
       }
-      cur = migration(cur);
+      try {
+        cur = migration(cur);
+      } catch (e) {
+        console.error(`Failed to migrate object from version ${i + 1} to version ${i + 2} of model ${modelName}:`);
+        console.error(JSON.stringify(cur, null, 4));
+        throw e;
+      }
     }
     return cur;
   }
