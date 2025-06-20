@@ -1,13 +1,18 @@
-type Dict = Record<string, any>;
-type FunctionDict = Record<string, (...args: any[]) => any>;
-type Migration<From extends Dict, To extends Dict> = (obj: From) => To;
-export declare function createModel<T extends Dict, // Model type
-S extends FunctionDict, // Storage engine return type
-M extends FunctionDict>(modelName: string, getId: (obj: T) => string, storageEngine: (params: StorageEngineParams<T>) => S, utilityMethods?: M, migrations?: Migration<any, any>[]): M & S;
-export type StorageEngineParams<T extends Dict> = {
+export type JsonValue = string | number | boolean | null | JsonValue[] | {
+    [key: string]: JsonValue;
+};
+type Migration<From extends JsonValue, To extends JsonValue> = (obj: From) => To;
+type Function = (...args: any[]) => any;
+type RecursiveFunctionDict = {
+    [key: string]: Function | RecursiveFunctionDict;
+};
+export declare function createModel<T extends JsonValue, // Model type
+S extends RecursiveFunctionDict, // Storage engine return type
+M extends RecursiveFunctionDict>(modelName: string, getId: (obj: T) => string, storageEngine: (params: StorageEngineParams<T>) => S, utilityMethods?: M, migrations?: Migration<any, any>[]): M & S;
+export type StorageEngineParams<T extends JsonValue> = {
     modelName: string;
     currentVersion: number;
     getId: (obj: T) => string;
-    migrate: (prev: Dict, version: number) => T;
+    migrate: (prev: JsonValue, version: number) => T;
 };
 export {};

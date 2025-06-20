@@ -5,7 +5,7 @@ function createModel(modelName, getId, storageEngine, utilityMethods = {}, migra
     if (!migrations || version === currentVersion) {
       return prev;
     }
-    let cur = { ...prev };
+    let cur = Array.isArray(prev) ? [...prev] : typeof prev === "object" && prev !== null ? { ...prev } : prev;
     for (let i = version - 1;i < migrations.length; i++) {
       const migration = migrations[i];
       if (!migration) {

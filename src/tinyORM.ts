@@ -1,15 +1,27 @@
-type Dict = Record<string, any>;
-type FunctionDict = Record<string, (...args: any[]) => any>;
-type Migration<From extends Dict, To extends Dict> = (obj: From) => To;
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+type Migration<From extends JsonValue, To extends JsonValue> = (
+  obj: From
+) => To;
+type Function = (...args: any[]) => any;
+type RecursiveFunctionDict = {
+  [key: string]: Function | RecursiveFunctionDict;
+};
 
 export function createModel<
-  T extends Dict, // Model type
-  S extends FunctionDict, // Storage engine return type
-  M extends FunctionDict // Utility methods type
+  T extends JsonValue, // Model type
+  S extends RecursiveFunctionDict, // Storage engine return type
+  M extends RecursiveFunctionDict // Utility methods type
 >(
   modelName: string,
   // Model type (T) is inferred by callers type annotating it into a specific
-  // type here. Otherwise, it defaults to Dict.
+  // type here. Otherwise, it defaults to JsonValue.
   getId: (obj: T) => string,
   storageEngine: (params: StorageEngineParams<T>) => S,
   utilityMethods: M = {} as M,
@@ -18,12 +30,16 @@ export function createModel<
   const currentVersion = migrations.length + 1;
 
   // migrate() is a helper function passed to the storage engine.
-  function migrate(prev: Dict, version: number): T {
+  function migrate(prev: JsonValue, version: number): T {
     if (!migrations || version === currentVersion) {
       return prev as T;
     }
 
-    let cur = { ...prev };
+    let cur = Array.isArray(prev)
+      ? [...prev]
+      : typeof prev === "object" && prev !== null
+      ? { ...prev }
+      : prev;
 
     for (let i = version - 1; i < migrations.length; i++) {
       const migration = migrations[i];
@@ -51,9 +67,9 @@ export function createModel<
   };
 }
 
-export type StorageEngineParams<T extends Dict> = {
+export type StorageEngineParams<T extends JsonValue> = {
   modelName: string;
   currentVersion: number;
   getId: (obj: T) => string;
-  migrate: (prev: Dict, version: number) => T;
+  migrate: (prev: JsonValue, version: number) => T;
 };
