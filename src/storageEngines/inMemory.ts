@@ -1,8 +1,6 @@
-import { type StorageEngineParams } from "../tinyORM";
+import { type JsonValue, type StorageEngineParams } from "../tinyORM";
 
-type Dict = Record<string, any>;
-
-export function inMemoryStorageEngine<T extends Dict>({
+export function inMemoryStorageEngine<T extends JsonValue>({
   modelName,
   currentVersion,
   getId,
@@ -13,7 +11,7 @@ export function inMemoryStorageEngine<T extends Dict>({
     {
       modelName: string;
       modelVersion: number;
-      object: Dict;
+      object: JsonValue;
     }
   > = {};
 

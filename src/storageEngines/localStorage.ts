@@ -1,6 +1,4 @@
-import { type StorageEngineParams } from "../tinyORM";
-
-type Dict = Record<string, any>;
+import { type JsonValue, type StorageEngineParams } from "../tinyORM";
 
 function tupleMap<Tuple extends readonly unknown[], Result>(
   tuple: Tuple,
@@ -9,7 +7,7 @@ function tupleMap<Tuple extends readonly unknown[], Result>(
   return tuple.map(map) as { [K in keyof Tuple]: Result };
 }
 
-export function localStorageEngine<T extends Dict>({
+export function localStorageEngine<T extends JsonValue>({
   modelName,
   currentVersion,
   getId,
@@ -19,7 +17,7 @@ export function localStorageEngine<T extends Dict>({
     string,
     {
       modelVersion: number;
-      object: Dict;
+      object: JsonValue;
     }
   >;
 

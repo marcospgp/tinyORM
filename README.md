@@ -46,31 +46,15 @@ TinyORM's codebase is written to be simple and readable. You shouldn't be afraid
 
 ## Storage engines
 
-TinyORM ships with these [storage engines](./src/storageEngines), but you can write a custom one too - even by just combining existing ones.
+TinyORM ships with these [storage engines](./src/storageEngines), but you can write a custom one too - even just by combining existing ones.
 
 Some reasons you may want to write a custom storage engine could be:
 
 - Using more than one storage medium, such as the browser's `localStorage` for logged out users and a cloud database for logged in users.
 - Pre or post processing your objects, such as updating an `updated_at` timestamp before saving.
-- Introducing custom querying functionality. A storage engine can rely on and query against any fields that it constrains models using it to include.
+- Querying: storage engines can rely on and query against any fields that it constrains models using it to include.
 
 The included storage engines should be a good reference when writing a custom one.
-
-### Higher level storage engines
-
-You can write storage engines that take any kind of extra information by wrapping them in a function.
-
-Storage engines are already a function, so this means it will be a function returning a function (the actual storage engine).
-
-You can then simply call your higher-level storage engine, passing in the intended values, in turn passing the result to your models.
-
-## Type validation
-
-TinyORM is based on typescript and thus doesn't enforce type validation at runtime.
-
-You can use an existing library for this functionality, such as `zod`.
-
-Like other kinds of data pre-processing, it should be implemented at the storage engine level. You can write a custom storage engine with a wrapping function that takes in whatever it needs, then call it and pass the result to your model.
 
 ## Tradeoffs
 

@@ -1,6 +1,5 @@
-import { type StorageEngineParams } from "../tinyORM";
-type Dict = Record<string, any>;
-export declare function localStorageEngine<T extends Dict>({ modelName, currentVersion, getId, migrate, }: StorageEngineParams<T>): {
+import { type JsonValue, type StorageEngineParams } from "../tinyORM";
+export declare function localStorageEngine<T extends JsonValue>({ modelName, currentVersion, getId, migrate, }: StorageEngineParams<T>): {
     save: (...objs: T[]) => void;
     /** Get all items. */
     getAll: () => T[];
@@ -15,4 +14,3 @@ export declare function localStorageEngine<T extends Dict>({ modelName, currentV
      */
     getStrict: <Ids extends readonly string[]>(...ids: Ids) => { [K in keyof Ids]: T; };
 };
-export {};

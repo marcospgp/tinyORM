@@ -7,8 +7,7 @@ type Dict = Record<string, any>;
 test("Building a custom storage engine.", () => {
   // You may want your storage engines to include functionality that requires
   // passing in custom parameters related to your model.
-  // For example, you may want to validate your objects using a library such as
-  // zod.
+  // For example, you may want to introduce runtime type validation.
   // Here we'll use a simple validating function as an example.
 
   // We can pass arbitrary values to a storage engine by wrapping it in a parent
@@ -22,7 +21,6 @@ test("Building a custom storage engine.", () => {
       return {
         save(...objs: T[]) {
           for (const obj of objs) {
-            // Any values passed to that function are now in scope.
             // Here, we run the model-specific validation function.
             if (!validate(obj)) {
               throw new Error("Object failed validation!");

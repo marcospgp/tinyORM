@@ -9,7 +9,9 @@ export type JsonValue =
 type Migration<From extends JsonValue, To extends JsonValue> = (
   obj: From
 ) => To;
+
 type Function = (...args: any[]) => any;
+
 type RecursiveFunctionDict = {
   [key: string]: Function | RecursiveFunctionDict;
 };
