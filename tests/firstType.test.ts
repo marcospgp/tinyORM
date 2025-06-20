@@ -8,10 +8,11 @@ test("Defining the first type.", () => {
     email: string;
   };
 
+  // We then create our model.
   const userModel = createModel(
-    // The first parameter is a unique name for your type.
-    // This allows storage engines to avoid issues with overlapping IDs across
-    // different models, and possibly to optimize storage.
+    // The first parameter is a unique name for your model.
+    // This is passed along to the storage engine, which may use it to
+    // distinguish models from each other and possibly to optimize storage.
     "user",
     // The second parameter shows how to get a unique ID out of your type.
     // Annotating the type here is enough for typescript to infer it as the one
@@ -39,26 +40,4 @@ test("Defining the first type.", () => {
   const retrievedUser = userModel.get("hunter2");
 
   expect(retrievedUser.email).toBe("hunter2@example.com");
-
-  // We can also add helper methods to our models.
-  // Let's create a new model for our User type with a helper method:
-  const user2Model = createModel(
-    "user",
-    (user: User) => user.username,
-    inMemoryStorageEngine,
-    // The third parameter specifies any methods we want to attach to the model.
-    {
-      getEmailDomain(user: User) {
-        return user.email.split("@")[1] || "";
-      },
-    }
-  );
-
-  // We can then call our utility method.
-  // Models expose type hints correctly for both utility methods and the methods
-  // exposed by the specified storage engine, so your editor should be able to
-  // show you what's available.
-  const domain = user2Model.getEmailDomain(user);
-
-  expect(domain).toBe("example.com");
 });

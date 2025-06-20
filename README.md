@@ -36,9 +36,10 @@ You may notice TinyORM is light on constraints. You're not supposed to know what
 To get started with TinyORM, check out the following examples:
 
 1. [Specify your first type](./tests/firstType.test.ts)
-2. [Update your type and specify a migration](./tests/firstMigration.test.ts)
-3. [Create a custom storage engine](./tests/customStorageEngine.test.ts)
-4. [Create a higher level storage engine](./tests/higherLevelStorageEngine.test.ts)
+1. [Add utility methods](./tests/utilityMethods.test.ts)
+1. [Update your type and specify a migration](./tests/firstMigration.test.ts)
+1. [Create a custom storage engine](./tests/customStorageEngine.test.ts)
+1. [Create a higher level storage engine](./tests/higherLevelStorageEngine.test.ts)
 
 These examples are actually test files, which get run before every release - ensuring the code is always up to date.
 

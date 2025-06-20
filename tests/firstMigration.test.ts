@@ -29,7 +29,7 @@ test("Writing the first migration.", () => {
     "user",
     (user: User) => user.username,
     inMemoryStorageEngine,
-    {},
+    () => ({}),
     // The fifth parameter is a list of migrations.
     // Including the proper type annotations helps ensure the migration is
     // valid.
@@ -45,6 +45,8 @@ test("Writing the first migration.", () => {
 
   // Remember that migrations are applied at retrieval time, so this new model
   // has no effect until you load data and save it again.
-  // The storage engine will applies any migrations needed to get your data to
-  // the latest version as it retrieves it.
+  // The storage engine applies any migrations needed to get your data to the
+  // latest version as it retrieves it.
+  // It knows which migrations to apply by storing the model's version alongside
+  // the object.
 });

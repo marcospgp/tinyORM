@@ -26,7 +26,7 @@ export function createModel<
   // type here. Otherwise, it defaults to JsonValue.
   getId: (obj: T) => string,
   storageEngine: (params: StorageEngineParams<T>) => S,
-  utilityMethods: M = {} as M,
+  utilitiesFactory: (storageEngine: S) => M = () => ({} as M),
   migrations: Migration<any, any>[] = []
 ) {
   const currentVersion = migrations.length + 1;
@@ -70,14 +70,18 @@ export function createModel<
     return cur as T;
   }
 
+  const storageMethods = storageEngine({
+    modelName,
+    currentVersion,
+    getId,
+    migrate,
+  });
+
+  const utilities = utilitiesFactory?.(storageMethods);
+
   return {
-    ...utilityMethods,
-    ...storageEngine({
-      modelName,
-      currentVersion,
-      getId,
-      migrate,
-    }),
+    ...utilities,
+    ...storageMethods,
   };
 }
 

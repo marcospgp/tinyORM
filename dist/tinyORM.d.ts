@@ -8,7 +8,7 @@ type RecursiveFunctionDict = {
 };
 export declare function createModel<T extends JsonValue, // Model type
 S extends RecursiveFunctionDict, // Storage engine return type
-M extends RecursiveFunctionDict>(modelName: string, getId: (obj: T) => string, storageEngine: (params: StorageEngineParams<T>) => S, utilityMethods?: M, migrations?: Migration<any, any>[]): M & S;
+M extends RecursiveFunctionDict>(modelName: string, getId: (obj: T) => string, storageEngine: (params: StorageEngineParams<T>) => S, utilitiesFactory?: (storageEngine: S) => M, migrations?: Migration<any, any>[]): M & S;
 export type StorageEngineParams<T extends JsonValue> = {
     modelName: string;
     currentVersion: number;
