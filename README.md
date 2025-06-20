@@ -56,49 +56,41 @@ Some reasons you may want to write a custom storage engine could be:
 
 The included storage engines should be a good reference when writing a custom one.
 
-## Tradeoffs
+## FAQ
 
-Everything in computer science has tradeoffs, and TinyORM is no exception. These are the ones we get by radically optimizing for simplicity and development speed.
-
-### Migrations
+### Why are migration applied at retrieval time?
 
 Migrations being applied at data retrieval time avoids having to maintain database specific migration logic and making sure it gets applied at the right time. You no longer have to think about syncing your database's state with your app, as the app now owns that state.
 
 It also means you don't have to control every database you store data on, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
 
-A downside is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
+The tradeoff is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
 
-Another downside is that your stored data isn't guaranteed to be in the latest format. You can still make assumptions on it, such as assuming it has a `createdAt` field for time-based querying, but your storage engine must enforce this assumption by constraining its generic type parameter (with something like `T extends Timestamped`).
+### Can I still query my data?
 
-### Storage engines
+TinyORM doesn't expose yet another querying API for you to learn. The only way to query your data at the database level is through your storage engine.
 
-Being database agnostic and placing no restrictions on the methods that a storage engine exposes means you have total flexibility in your storage logic.
+A storage engine can force objects to include certain fields by constraining its generic type (with `T extends ConstrainedType`). For example, you should always enforce timestamp fields (such as `_created_at` and `_updated_at`) unless there's a good reason not to.
 
-You can expose a way for your models to send SQL queries with a `query(sql: string)` or just a `get(id: string)` that retrieves items one at a time.
+Your storage engine can then rely on and expose querying functionality for any fields it enforces.
 
-The downside is that users have to become familiar with the API exposed by a given storage engine, and that switching databases is not a one line change.
+Note that you can't migrate your storage engine, so these fields have to be set from the start of your project. Modifying them may cause your storage engine to break when retrieving previously stored data.
 
-## Architecture suggestions
+More granular data filtering and processing can still be done on your client side, which has several benefits:
 
-### Separating data per user
+- No database-specific querying languages
+- All of your data processing logic is plain typescript
+- Processing happens on the user's device (less demand for server compute)
 
-This library is entirely focused on the client side and makes no assumptions about your backend.
+### Why is there no fixed API for storage engines?
 
-While you can write a custom engine that interacts with an arbitrary server side API, you may want to consider simplifying your architecture by storing each user's data separately and simply ensuring that a user can only access their own data.
+TinyORM is maximally flexible and acts as a simple foundation that you can build upon.
 
-This avoids having to maintain a backend API with complex authorization logic - and perhaps having a backend at all.
+It does not enforce a fixed storage engine API because it doesn't know where or how storage engines will store data.
 
-If each user holds a key to their data, they can just access it directly.
+Storage mediums can vary radically - from simple key-value stores to SQL and vector databases - and so can storage engines and the methods they expose.
 
-Public data that should be accessible to multiple users can be stored in a separate, shared location.
-
-### Complex queries may not be necessary
-
-You may not need to expose a complex querying API in your custom storage engine.
-
-Consider allowing your users to keep more of their data on-device and seeing your database as more of a backup, long-term storage.
-
-Keeping querying and processing logic entirely in your client side both simplifies your architecture and leverages the user's device for computation.
+The tradeoff is that switching storage engines may not be a one-line change, but in most advanced scenarios you are likely to be implementing your own already.
 
 ## Maintainers
 
