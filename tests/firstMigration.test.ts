@@ -45,8 +45,8 @@ test("Writing the first migration.", () => {
 
   // Remember that migrations are applied at retrieval time, so this new model
   // has no effect until you load data and save it again.
-  // The storage engine applies any migrations needed to get your data to the
-  // latest version as it retrieves it.
-  // It knows which migrations to apply by storing the model's version alongside
-  // the object.
+  // Because the model version is stored alongside each object, the storage
+  // engine knows which migrations to apply to bring it to the latest version.
+  // The model version is calculated automatically based on how many migrations
+  // you pass to the model - you don't have to specify it manually.
 });
