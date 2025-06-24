@@ -101,7 +101,7 @@ To get started, simply run `bun install`.
 
 To build for production, run `bun run build`. Add `--watch` to watch for changes.
 
-To run tests, run `bun test`. Note tests rely on the built package, so you'll have to run `bun run build:noTest` after making any changes to see them reflected in the tests.
+To run tests, run `bun test`. Note tests rely on the built package, so you'll have to run `bun run build:noTest` after making any changes to see them reflected in the tests. `bun run build` will fail if the tests don't pass.
 
 To work on this package while using it in a project, you can link it as a dependency:
 
