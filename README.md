@@ -149,7 +149,7 @@ You're not expected to define your schema perfectly from the start, and the same
 
 You can start by picking from one of the included [storage engines](./src/storageEngines), then introducing more custom functionality as you go.
 
-Because migrations are applied at data retrieval time, data is not guaranteed to be stored on the latest version of your schema. You can still query your data at the database level from your storage engine by enforcing certain fields.
+Because migrations are applied at data retrieval time, data is not guaranteed to be held in storage on the latest version of your schema. You can still query your data for specific fields however, by enforcing certain fields to always be present.
 
 Storage engines can enforce fields by constraining their generic type (with `T extends ConstrainedType`). For example, you should always enforce timestamp fields (such as `_created_at` and `_updated_at`) unless there's a good reason not to.
 
@@ -162,6 +162,8 @@ The TinyORM approach is to limit your data querying at the database level to a h
 The idea is to treat your storage as more of a cloud backup and less as a second app running on a remote server that you have to maintain.
 
 There is no need to hyperoptimize your storage - your users are going to be downloading 100GB+ games and streaming 4k video, so querying for specific fields to avoid a few extra bytes makes no sense in almost all scenarios.
+
+Complex calculations can also be cached and stored alongside the data.
 
 There are several benefits to keeping your finer data processing logic on the client side:
 
