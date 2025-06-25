@@ -85,7 +85,7 @@ Document databases promised to simplify storage for everyone, but followed in th
 
 You're expected to pick a single database, write migrations it understands, and apply them at exactly the right time.
 
-With TinyORM, your migrations are just typescript code that lives alongside your app. The main differentiating factor is that they are applied at data retrieval time. This has many benefits:
+With TinyORM, your migrations are just typescript code that lives alongside your app. The main differentiating factor, however, is that they are applied at data retrieval time. This has many benefits:
 
 - Because you don't have to run migration on your databases, you can store data anywhere - even on your users' devices.
 - Because you don't have to maintain database-specific migrations, you can combine more than one storage medium - such as storing data in `localStorage` for logged out users and in a cloud database for logged in users.
