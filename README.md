@@ -24,26 +24,56 @@ pnpm add @marcospgp/tiny-orm
 
 You're a builder who wants to ship instead of designing the perfect database schema before you get your first user. TinyORM is for you!
 
-These are the core ideas behind it:
+You start by defining your schema using regular typescript types:
 
-- Your schemas are defined as regular typescript types.
-- You can update your types at any time by providing a migration, which is just a plain typescript function that updates an object from the previous version to the new one.
-- Migrations are applied at retrieval time. This abstracts away an entire class of complexity by not having to worry about syncing your app with its database(s). It also allows you to store data in mediums owned by the user, such as their browser's `localStorage` (where you can't apply migrations arbitrarily).
-- Storage and retrieval logic is abstracted into storage engines, which are just functions that return a collection of methods, with no restrictions - like `get()` and `save()`.
+```typescript
+type User = {
+  username: string;
+  email: string;
+};
+```
 
-You may notice TinyORM is light on constraints. You're not supposed to know what your schema or your storage logic is going to look like. The goal is to give you a simple paradigm that you can build with, starting from a simple foundation.
+You then create a model for that type, which is where all the storage methods can be called from:
 
-To get started with TinyORM, check out the following examples:
+```typescript
+const userModel = createModel(
+  "user", // The model's name
+  (user: User) => user.username, // Showing how to get a unique ID
+  inMemoryStorageEngine // Specifying a storage engine
+);
+```
 
-1. [Specify your first type](./tests/firstType.test.ts)
-1. [Add utility methods](./tests/utilityMethods.test.ts)
-1. [Update your type and specify a migration](./tests/firstMigration.test.ts)
-1. [Create a custom storage engine](./tests/customStorageEngine.test.ts)
-1. [Create a higher level storage engine](./tests/higherLevelStorageEngine.test.ts)
+TinyORM uses some generic typing magic, so your model's type is inferred from the type expected by the second parameter (your ID generating function).
 
-These examples are actually test files, which get run before every release - ensuring the code is always up to date.
+You can then simply create objects of your type:
 
-TinyORM's codebase is written to be simple and readable. You shouldn't be afraid to jump into the code and see what's going on for yourself!
+```typescript
+const user: User = {
+  username: "hunter2",
+  email: "hunter2@example.com",
+};
+```
+
+And rely on the model to store and retrieve data. It simply exposes the methods provided by the storage engine:
+
+```typescript
+userModel.save(user);
+
+const retrievedUser = userModel.get("hunter2");
+console.log(retrievedUser.email); // Logs "hunter2@example.com"
+```
+
+Because your data is exposed as plain objects, you can just use them with any libraries that expect this format. With React, for example, you can store them in state or pass them to your components as props.
+
+For the fastest way to get started, check out the following examples:
+
+1. [Specifying your first type](./tests/firstType.test.ts)
+1. [Adding utility methods](./tests/utilityMethods.test.ts)
+1. [Updating your type and specifying a migration](./tests/firstMigration.test.ts)
+1. [Creating a custom storage engine](./tests/customStorageEngine.test.ts)
+1. [Creating a higher level storage engine](./tests/higherLevelStorageEngine.test.ts)
+
+TinyORM's codebase is written to be simple and accessible. Don't hesitate to jump into the code and see what's going on for yourself!
 
 ## Storage engines
 
@@ -59,7 +89,7 @@ The included storage engines should be a good reference when writing a custom on
 
 ## FAQ
 
-### Why are migration applied at retrieval time?
+### Why are migrations applied at retrieval time?
 
 Migrations being applied at data retrieval time avoids having to maintain database specific migration logic and making sure it gets applied at the right time. You no longer have to think about syncing your database's state with your app, as the app now owns that state.
 
