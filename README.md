@@ -149,7 +149,7 @@ You're not expected to define your schema perfectly from the start, and the same
 
 You can start by picking from one of the included [storage engines](./src/storageEngines), then introducing more custom functionality as you go.
 
-Because migrations are applied at data retrieval time, data is not guaranteed to be held in storage on the latest version of your schema. You can still query your data for specific fields however, by enforcing certain fields to always be present.
+Because migrations are applied at retrieval time, data is not guaranteed to be held in storage on the latest version of your schema. You can still query your data for specific fields however, by enforcing certain fields to always be present.
 
 Storage engines can enforce fields by constraining their generic type (with `T extends ConstrainedType`). For example, you should always enforce timestamp fields (such as `_created_at` and `_updated_at`) unless there's a good reason not to.
 

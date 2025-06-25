@@ -1,7 +1,7 @@
 {
   "name": "@marcospgp/tiny-orm",
   "description": "A minimal storage layer radically optimized toward development speed.",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marcospgp/tinyORM.git"
