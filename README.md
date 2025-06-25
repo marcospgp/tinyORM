@@ -63,8 +63,6 @@ const retrievedUser = userModel.get("hunter2");
 console.log(retrievedUser.email); // Logs "hunter2@example.com"
 ```
 
-TinyORM ships with a few [storage engines](./src/storageEngines) but you can write a custom one too - even just by combining existing ones.
-
 Because your data is exposed as plain objects, you can just use them with any libraries that expect this format. With React, for example, you can store them in state or pass them to your components as props.
 
 For the fastest way to get started, check out the following examples:
