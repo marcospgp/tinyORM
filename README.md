@@ -63,6 +63,8 @@ const retrievedUser = userModel.get("hunter2");
 console.log(retrievedUser.email); // Logs "hunter2@example.com"
 ```
 
+TinyORM ships with a few [storage engines](./src/storageEngines) but you can write a custom one too - even just by combining existing ones.
+
 Because your data is exposed as plain objects, you can just use them with any libraries that expect this format. With React, for example, you can store them in state or pass them to your components as props.
 
 For the fastest way to get started, check out the following examples:
@@ -75,53 +77,99 @@ For the fastest way to get started, check out the following examples:
 
 TinyORM's codebase is written to be simple and accessible. Don't hesitate to jump into the code and see what's going on for yourself!
 
+## Migrations
+
+Because SQL came before the agile manifesto, it still expects you to know everything about what you're building ahead of time.
+
+Relational databases expect all stored data to be on the latest version of its schema, with migrations maintained in a database-specific language and applied all at once in a world-stopping fashion.
+
+Document databases promised to simplify storage for everyone, but followed in the same footsteps - simply reinventing SQL in the form of yet another complex querying language, this time with more brackets.
+
+You're expected to pick a single database, write migrations it understands, and apply them at exactly the right time.
+
+With TinyORM, your migrations are just typescript code that lives alongside your app. The main differentiating factor of this library is that they are applied at data retrieval time. This has many benefits:
+
+- Because you don't have to run migration on your databases, you can store data anywhere - even on your users' devices.
+- Because you don't have to maintain database-specific migrations, you can combine more than one storage medium - such as storing data in `localStorage` for logged out users and in a cloud database for logged in users.
+- You don't have to sync your app's state with database state. There is no time-sensitive logic to run when deploying a new version of your app, and nothing goes wrong for a user that isn't running on the latest version.
+
+For an example, let's say you realized users should have physical addresses instead of emails. We can start with the `User` type we used earlier, renamed to `UserV1` to free up the `User` type for the new schema:
+
+```typescript
+type UserV1 = {
+  username: string;
+  email: string;
+};
+```
+
+You can simply define the new type however you like:
+
+```typescript
+type UserV2 = Omit<UserV1, "email"> & {
+  address: string;
+};
+
+type User = UserV2; // Aliasing the User type to latest schema version.
+```
+
+All you have to do is provide the model with a migration function, which shows how to go from a v1 user to a v2 one:
+
+```typescript
+createModel(
+  "user",
+  (user: User) => user.username,
+  inMemoryStorageEngine,
+  undefined,
+  [
+    (prev: UserV1): UserV2 => {
+      // Remove email field.
+      const { email: _, ...rest } = prev;
+      // Add address field.
+      return { ...rest, address: "unknown" };
+    },
+  ]
+);
+```
+
+The type annotations are important, as they can be really helpful in catching any mistakes.
+
+The model infers your schema's version from how many migrations you provided, and passes it along to the storage engine.
+
+The storage engine stores the version alongside the data, and uses this information to migrate it to the latest version on retrieval.
+
+There is a small tradeoff with applying migrations at retrieval time - you won't know a migration breaks with some specific data until it does. Migrations are just a part of your codebase, and thus are not exempt from introducing issues. Proper error reporting in production will help you catch any problems, migration related or not.
+
+On the other hand, you'll never run the risk of updating all of your users' data at once with a problematic migration.
+
 ## Storage engines
 
-TinyORM ships with these [storage engines](./src/storageEngines), but you can write a custom one too - even just by combining existing ones.
+TinyORM is maximally flexible and acts as a simple foundation that you can build upon. In line with this, it does not enforce a fixed storage API for storage engines.
 
-Some reasons you may want to write a custom storage engine could be:
+Storage mediums can vary radically - from simple key-value stores to SQL and vector databases - and so can storage engines and the methods they expose.
 
-- Using more than one storage medium, such as the browser's `localStorage` for logged out users and a cloud database for logged in users.
-- Pre or post processing your objects, such as updating an `updated_at` timestamp before saving.
-- Querying: storage engines can rely on and query against any fields that it constrains models using it to include.
+You're not expected to define your schema perfectly from the start, and the same goes for your storage logic.
 
-The included storage engines should be a good reference when writing a custom one.
+You can start by picking from one of the included [storage engines](./src/storageEngines), then introducing more custom functionality as you go.
 
-## FAQ
+Because migrations are applied at data retrieval time, data is not guaranteed to be stored on the latest version of your schema. You can still query your data at the database level from your storage engine by enforcing certain fields.
 
-### Why are migrations applied at retrieval time?
+Storage engines can enforce fields by constraining their generic type (with `T extends ConstrainedType`). For example, you should always enforce timestamp fields (such as `_created_at` and `_updated_at`) unless there's a good reason not to.
 
-Migrations being applied at data retrieval time avoids having to maintain database specific migration logic and making sure it gets applied at the right time. You no longer have to think about syncing your database's state with your app, as the app now owns that state.
+A storage engine can then rely on and expose querying functionality for any fields it enforces.
 
-It also means you don't have to control every database you store data on, so you can include mediums owned by the user in your architecture - such as the browser's `localStorage`.
+Because storage engines can't be migrated, these fields have to be set from the start. Modifying them may cause your storage engine to break when retrieving previously stored data.
 
-The tradeoff is that you won't know a migration breaks with some specific data until it does, in the hands of a user. You have to set up proper error reporting and fix it when it happens.
+The TinyORM approach is to limit your data querying at the database level to a high granularity, such as getting all data for a given day. You can then process your data further once it has been retrieved.
 
-### Can I still query my data?
+The idea is to treat your storage as more of a cloud backup and less as a second app running on a remote server that you have to maintain.
 
-TinyORM doesn't expose yet another querying API for you to learn. The only way to query your data at the database level is through your storage engine.
+There is no need to hyperoptimize your storage - your users are going to be downloading 100GB+ games and streaming 4k video, so querying for specific fields to avoid a few extra bytes makes no sense in almost all scenarios.
 
-A storage engine can force objects to include certain fields by constraining its generic type (with `T extends ConstrainedType`). For example, you should always enforce timestamp fields (such as `_created_at` and `_updated_at`) unless there's a good reason not to.
-
-Your storage engine can then rely on and expose querying functionality for any fields it enforces.
-
-Note that you can't migrate your storage engine, so these fields have to be set from the start of your project. Modifying them may cause your storage engine to break when retrieving previously stored data.
-
-More granular data filtering and processing can still be done on your client side, which has several benefits:
+There are several benefits to keeping your finer data processing logic on the client side:
 
 - No database-specific querying languages
 - All of your data processing logic is plain typescript
 - Processing happens on the user's device (less demand for server compute)
-
-### Why is there no fixed API for storage engines?
-
-TinyORM is maximally flexible and acts as a simple foundation that you can build upon.
-
-It does not enforce a fixed storage engine API because it doesn't know where or how storage engines will store data.
-
-Storage mediums can vary radically - from simple key-value stores to SQL and vector databases - and so can storage engines and the methods they expose.
-
-The tradeoff is that switching storage engines may not be a one-line change, but in most advanced scenarios you are likely to be implementing your own already.
 
 ## Maintainers
 

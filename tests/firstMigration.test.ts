@@ -29,7 +29,7 @@ test("Writing the first migration.", () => {
     "user",
     (user: User) => user.username,
     inMemoryStorageEngine,
-    () => ({}),
+    undefined,
     // The fifth parameter is a list of migrations.
     // Including the proper type annotations helps ensure the migration is
     // valid.
