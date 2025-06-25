@@ -43,7 +43,7 @@ const userModel = createModel(
 );
 ```
 
-TinyORM uses some generic typing magic, so your model's type is inferred from the type expected by the second parameter (your ID generating function).
+TinyORM infers your model's type from the type expected by your ID generating function (the second parameter above).
 
 You can then simply create objects of your type:
 
