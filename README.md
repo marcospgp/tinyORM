@@ -33,7 +33,7 @@ type User = {
 };
 ```
 
-You then create a model for that type, which is where all the storage methods can be called from:
+You then create a model for that type:
 
 ```typescript
 const userModel = createModel(
@@ -43,7 +43,7 @@ const userModel = createModel(
 );
 ```
 
-TinyORM infers your model's type from the type expected by your ID generating function (the second parameter above).
+Your model's type is inferred from the type annotation in the second parameter above, which is a function showing how to get a unique ID from your type.
 
 You can then simply create objects of your type:
 
