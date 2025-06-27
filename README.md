@@ -129,13 +129,11 @@ createModel(
 );
 ```
 
-The type annotations are important, as they can be really helpful in catching any mistakes.
-
 The model infers your schema's version from how many migrations you provided, and passes it along to the storage engine.
 
 The storage engine stores the version alongside the data, and uses this information to migrate it to the latest version on retrieval.
 
-There is a small tradeoff with applying migrations at retrieval time - you won't know a migration breaks with some specific data until it does. Migrations are just a part of your codebase, and thus are not exempt from introducing issues. Proper error reporting in production will help you catch any problems, migration related or not.
+The type annotations will help catch most mistakes, but it's still possible to write a buggy migration - just like it's possible to introduce a bug in any other part of your codebase. Proper error reporting in production will help you be aware of any problems your users may run into.
 
 On the other hand, you'll never run the risk of updating all of your users' data at once with a problematic migration.
 
