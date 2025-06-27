@@ -4,62 +4,66 @@ import {
   type StorageEngineParams,
 } from "../dist";
 import { expect, test } from "bun:test";
+import type { RecursiveFunctionDict } from "../src";
 
 test("Building a custom storage engine.", () => {
   // One of the main strengths of TinyORM is that it is database agnostic.
   // You can write a custom storage engine for any storage medium, or even one
   // that mixes together other storage engines.
-  // For this example, we will write a storage engine that enforces "createdAt"
-  // and "updatedAt" timestamps in stored objects.
-  // Enforcing the presence of certain fields makes it possible for a storage
-  // engine to query against them (even though we won't do that in this
-  // example).
-  // You should always enforce timestamps, even if won't need to query against
-  // them immediately - you can't change a storage engine's type constraint
-  // later, as it can cause issues when retrieving previously stored data.
+  // For this example we'll write a storage engine that enforces "createdAt"
+  // and "updatedAt" timestamps in the objects it handles.
+  // Enforcing the presence of certain fields allows a storage engine to query
+  // against them.
+  // You should always enforce timestamps, even if you won't need to query
+  // against them right away - you can't change a storage engine's type
+  // constraint after having stored some data, as it can cause issues when
+  // retrieving it.
 
   // We start by creating a type that encodes the assumptions we want to be able
   // to make about our objects.
   type Timestamped = {
     /** ISO timestamp. */
-    createdAt: string;
+    _createdAt: string;
     /** ISO timestamp. */
-    updatedAt: string;
+    _updatedAt: string;
   };
 
   // We then create our storage engine.
-  // A storage engine is just a generic function that can be passed into a
-  // model, which then calls it with some model-specific parameters and appends
-  // the resulting set of methods to itself.
-  // When a model uses a storage engine, type T is set to the same type used
-  // by the objects of that model.
-  // A storage engine should always use the type T to annotate received and
-  // returned objects of the model's type.
+  // A storage engine is just a generic function that gets passed in when
+  // creating a model. It gets called by the model with a set of parameters that
+  // it can use to define a set of methods. Those methods are then what you
+  // receive in the function that defines what methods a model will have.
 
-  // We specify Timestamped as a constraint on the generic type. The minimum
-  // constraint is Record<string, any>.
-  // The storage engine receives a StorageEngineParams<T> object from the model
-  // that is going to use it.
-  function timestampedStorageEngine<T extends Timestamped>({
-    // The name of the model that is trying to use this storage engine.
-    modelName,
-    // The current version of that model.
-    currentVersion,
-    // A function that returns a unique ID given an object of type T (our
-    // generic parameter).
-    getId,
-    // A function that updates a previously stored object to the latest version,
-    // compatible with type T.
-    // A storage engine must always call this function before returning any
-    // data.
-    // We don't call it in this example as we just rely on the in-memory storage
-    // engine, but check out the source code for the included storage engines
-    // to see how they work!
-    migrate,
-  }: StorageEngineParams<T>) {
+  // Storage engines define a generic type parameter, in this example called T.
+  // This type will be set by the model using this storage engine.
+  // For now, we don't know what model will be using it, nor with which type -
+  // so we use type T to represent that not yet defined type.
+  // We specify Timestamped as a constraint on the generic type, which will
+  // force models to include the fields we defined earlier.
+
+  function timestampedStorageEngine<T extends Timestamped>(
+    // Storage engines receive a StorageEngineParams<T> object as their only
+    // parameter.
+    // Using that type to annotate the objects allows us to skip annotating
+    // each field.
+    {
+      // The name of the model that is trying to use this storage engine.
+      modelName,
+      // The current version of that model.
+      currentVersion,
+      // A function that returns a unique ID given an object of type T (the type
+      // which the model will specify when using this storage engine).
+      getId,
+      // A function that brings an object to the latest version of this model's
+      // schema.
+      // A storage engine must always pass a previously stored object through
+      // this function before returning it.
+      migrate,
+    }: StorageEngineParams<T>
+  ) {
     // This storage engine will actually rely on an existing one to store its
     // data.
-    // It just adds some functionality on top of it.
+    // You can rely on one, many, or write all your storage logic from scratch!
     const engine = inMemoryStorageEngine({
       modelName,
       currentVersion,
@@ -67,18 +71,24 @@ test("Building a custom storage engine.", () => {
       migrate,
     });
 
-    // There are no restrictions on what the methods returned by a storage engine
-    // look like.
+    // A storage engine must return a RecursiveFunctionDict, which is just an
+    // object where each field is either a function or another
+    // RecursiveFunctionDict.
     return {
       ...engine,
       save(...objs: T[]) {
         // This engine just updates the "updatedAt" timestamp before letting
         // the in-memory storage engine save the data.
         engine.save(
-          ...objs.map((x) => ({ ...x, updatedAt: new Date().toISOString() }))
+          ...objs.map((x) => ({ ...x, _updatedAt: new Date().toISOString() }))
         );
       },
-    };
+
+      // You don't have to include this, but it helps ensure your code stays
+      // correct.
+      // Don't use a type annotation or assertion instead of "satisfies", as
+      // tinyORM relies on the return type inferred by typescript!
+    } satisfies RecursiveFunctionDict;
   }
 
   // We can now define a type:
@@ -87,15 +97,16 @@ test("Building a custom storage engine.", () => {
     email: string;
     // Note that if we remove these fields, our model definition will error
     // below - because this type will not meet the storage engine's constraint.
-    createdAt: string;
-    updatedAt: string;
+    _createdAt: string;
+    _updatedAt: string;
   };
 
   // And a model that uses that type and our custom engine:
   const timestampedUserModel = createModel(
     "user",
     (x: User) => x.username,
-    timestampedStorageEngine
+    timestampedStorageEngine,
+    (storageMethods) => ({ ...storageMethods })
   );
 
   const startingTimestamp = new Date(1990, 0, 1).toISOString();
@@ -103,11 +114,11 @@ test("Building a custom storage engine.", () => {
   timestampedUserModel.save({
     username: "hunter2",
     email: "hunter2@example.com",
-    createdAt: startingTimestamp,
-    updatedAt: startingTimestamp,
+    _createdAt: startingTimestamp,
+    _updatedAt: startingTimestamp,
   });
 
   const storedUser = timestampedUserModel.get("hunter2");
 
-  expect(storedUser.updatedAt).not.toBe(startingTimestamp);
+  expect(storedUser._updatedAt).not.toBe(startingTimestamp);
 });

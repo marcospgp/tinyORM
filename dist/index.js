@@ -1,6 +1,6 @@
 // src/tinyORM.ts
-function createModel(modelName, getId, storageEngine, utilitiesFactory = () => ({}), migrations = []) {
-  const currentVersion = migrations.length + 1;
+function createModel(modelName, getId, storageEngine, methodsFactory, migrations) {
+  const currentVersion = migrations ? migrations.length + 1 : 1;
   function migrate(prev, version) {
     if (!migrations || version === currentVersion) {
       return prev;
@@ -27,10 +27,8 @@ function createModel(modelName, getId, storageEngine, utilitiesFactory = () => (
     getId,
     migrate
   });
-  const utilities = utilitiesFactory?.(storageMethods);
   return {
-    ...utilities,
-    ...storageMethods
+    ...methodsFactory(storageMethods)
   };
 }
 // src/storageEngines/localStorage.ts

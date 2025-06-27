@@ -12,24 +12,29 @@ type Migration<From extends JsonValue, To extends JsonValue> = (
 
 type Function = (...args: any[]) => any;
 
-type RecursiveFunctionDict = {
+export type RecursiveFunctionDict = {
   [key: string]: Function | RecursiveFunctionDict;
 };
 
 export function createModel<
-  T extends JsonValue, // Model type
-  S extends RecursiveFunctionDict, // Storage engine return type
-  M extends RecursiveFunctionDict // Utility methods type
+  T extends JsonValue,
+  S extends RecursiveFunctionDict,
+  M extends RecursiveFunctionDict
 >(
   modelName: string,
-  // Model type (T) is inferred by callers type annotating it into a specific
-  // type here. Otherwise, it defaults to JsonValue.
+  /**
+   * Annotating the obj parameter in this callback with the intended type will
+   * make typescript infer it as the type for this model.
+   * Specifying the type with the generic syntax (createModel<T>()) is not
+   * practical as there are other generic type parameters, and all must be
+   * either inferred or manually specified at once.
+   */
   getId: (obj: T) => string,
-  storageEngine: (params: StorageEngineParams<T>) => S,
-  utilitiesFactory: (storageEngine: S) => M = () => ({} as M),
-  migrations: Migration<any, any>[] = []
+  storageEngine: StorageEngine<T, S>,
+  methodsFactory: (storageMethods: S) => M,
+  migrations?: Migration<any, any>[]
 ) {
-  const currentVersion = migrations.length + 1;
+  const currentVersion = migrations ? migrations.length + 1 : 1;
 
   // migrate() is a helper function passed to the storage engine.
   function migrate(prev: JsonValue, version: number): T {
@@ -77,15 +82,16 @@ export function createModel<
     migrate,
   });
 
-  const utilities = utilitiesFactory?.(storageMethods);
-
   return {
-    ...utilities,
-    ...storageMethods,
+    ...methodsFactory(storageMethods),
   };
 }
 
-export type StorageEngineParams<T extends JsonValue> = {
+type StorageEngine<T extends JsonValue, R extends RecursiveFunctionDict> = (
+  params: StorageEngineParams<T>
+) => R;
+
+export type StorageEngineParams<T> = {
   modelName: string;
   currentVersion: number;
   getId: (obj: T) => string;

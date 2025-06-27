@@ -29,10 +29,10 @@ test("Writing the first migration.", () => {
     "user",
     (user: User) => user.username,
     inMemoryStorageEngine,
-    undefined,
+    (storageMethods) => ({ ...storageMethods }),
     // The fifth parameter is a list of migrations.
-    // Including the proper type annotations helps ensure the migration is
-    // valid.
+    // It's important to include the proper type annotations here - they'll help
+    // catch most issues.
     [
       (prev: UserV1): UserV2 => {
         // Remove email field.
@@ -45,8 +45,8 @@ test("Writing the first migration.", () => {
 
   // Remember that migrations are applied at retrieval time, so this new model
   // has no effect until you load data and save it again.
-  // Because the model version is stored alongside each object, the storage
-  // engine knows which migrations to apply to bring it to the latest version.
-  // The model version is calculated automatically based on how many migrations
-  // you pass to the model - you don't have to specify it manually.
+  // The storage engine infers your model's current version from how many
+  // migrations you've passed in, and stores that version alongside each object.
+  // It then uses that information to apply the correct migrations when
+  // retrieving that data.
 });

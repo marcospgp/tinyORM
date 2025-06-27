@@ -43,9 +43,9 @@ const userModel = createModel(
 );
 ```
 
-Your model's type is inferred from the type annotation in the second parameter above, which is a function showing how to get a unique ID from your type.
+Your model's type is inferred from the type annotation in the second parameter above, which is a function showing how to get a unique ID from an object of that type.
 
-You can then simply create objects of your type:
+You can then simply create objects:
 
 ```typescript
 const user: User = {
@@ -173,9 +173,9 @@ This project uses [bun](https://bun.sh) for dependency management and its build 
 
 To get started, simply run `bun install`.
 
-To build for production, run `bun run build`. Add `--watch` to watch for changes.
-
 To run tests, run `bun test`. Note tests rely on the built package, so you'll have to run `bun run build:noTest` after making any changes to see them reflected in the tests. `bun run build` will fail if the tests don't pass.
+
+To build for production, run `bun run build`. Add `--watch` to watch for changes.
 
 To work on this package while using it in a project, you can link it as a dependency:
 

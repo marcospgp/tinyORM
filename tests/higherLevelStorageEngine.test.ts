@@ -6,9 +6,10 @@ type Dict = Record<string, any>;
 
 test("Building a custom storage engine.", () => {
   // You may want your storage engines to include functionality that requires
-  // passing in custom parameters related to your model.
-  // For example, you may want to introduce runtime type validation.
-  // Here we'll use a simple validating function as an example.
+  // passing in custom parameters related to your model, such as for runtime
+  // type validation.
+  // Here we'll use a simple validating function as an example, but you may be
+  // interested in integrating a third party validation library.
 
   // We can pass arbitrary values to a storage engine by wrapping it in a parent
   // function:
@@ -45,11 +46,16 @@ test("Building a custom storage engine.", () => {
   );
 
   // We then pass the engine when creating our model.
-  const userModel = createModel("user", (user) => user.username, userEngine);
+  const userModel = createModel(
+    "user",
+    (user) => user.username,
+    userEngine,
+    (storageMethods) => ({ ...storageMethods })
+  );
 
   expect(() => {
-    // We should expect this save call to fail as this user does not pass
-    // our validation logic.
+    // We should expect this save call to fail as this user does not meet our
+    // validation criteria.
     userModel.save({ username: "", email: "something@example.com" });
   }).toThrow();
 });

@@ -7,52 +7,31 @@ test("Adding utility methods.", () => {
     email: string;
   };
 
-  // We can also add helper methods to our models.
-  // Let's create a new model for our User type with a helper method:
+  // Models can expose any set of methods, and don't have to expose all or even
+  // any of those provided by the storage engine. This means you can, for
+  // example, constrain your storage code to follow a given convention - such as
+  // React's reducer approach (except not as pure, given that storing data
+  // introduces a side effect).
+
+  type UserAction =
+    | { type: "CREATE" }
+    | { type: "SET_EMAIL"; email: string }
+    | { type: "CLEAR_EMAIL" };
+
   const userModel = createModel(
     "user",
     (user: User) => user.username,
     inMemoryStorageEngine,
-    // The fourth parameter to createModel() is a function that receives the
-    // methods exposed by the storage engine and returns any utility methods
-    // that should be attached to the model.
-    // Your utility methods don't have to rely on the storage methods, but they
-    // can.
-    (_) => ({
-      getEmailDomain: (user: User) => user.email.split("@")[1] || "",
-    })
-  );
-
-  const user: User = {
-    username: "hunter2",
-    email: "hunter2@example.com",
-  };
-
-  // You can call utility methods directly on the model.
-  // Models expose type hints correctly for both utility methods and the methods
-  // exposed by the specified storage engine, so your editor should be able to
-  // show you what's available.
-  const domain = userModel.getEmailDomain(user);
-
-  expect(domain).toBe("example.com");
-
-  // You can also use utility methods to expose reducer-style functionality,
-  // which fits well with a functional-friendly library like React.
-
-  type UserAction =
-    | { type: "SET_EMAIL"; email: string }
-    | { type: "CLEAR_EMAIL" };
-
-  const userModel2 = createModel(
-    "user",
-    (user: User) => user.username,
-    inMemoryStorageEngine,
-    (storage) => ({
-      // Naming this method "persist" makes it clear that it writes to the
-      // database in addition to returning a value.
+    (storageMethods) => ({
+      // This model only exposes a persist() method for storing data.
+      // We name it "persist" instead of the conventional "dispatch" in order to
+      // make it explicit that it writes to the database in addition to
+      // returning a value.
       persist: (user: User, action: UserAction): User => {
         let newUser: User;
-        if (action.type === "SET_EMAIL") {
+        if (action.type === "CREATE") {
+          newUser = { ...user };
+        } else if (action.type === "SET_EMAIL") {
           newUser = {
             ...user,
             email: action.email,
@@ -68,17 +47,31 @@ test("Adding utility methods.", () => {
           );
         }
 
-        storage.save(newUser);
+        storageMethods.save(newUser);
         return newUser;
       },
+
+      // We still expose a data retrieval method from the storage engine.
+      get: storageMethods.get,
     })
   );
 
-  const newUser = userModel2.persist(user, { type: "CLEAR_EMAIL" });
+  // We can now create a user through the method we exposed in the model:
+  let user = userModel.persist(
+    {
+      username: "hunter2",
+      email: "hunter2@example.com",
+    },
+    { type: "CREATE" }
+  );
 
-  expect(newUser.email).toBe("");
+  expect(user.email).toBe("hunter2@example.com");
 
-  const retrievedUser = userModel2.get("hunter2");
+  user = userModel.persist(user, { type: "CLEAR_EMAIL" });
+
+  expect(user.email).toBe("");
+
+  const retrievedUser = userModel.get("hunter2");
 
   expect(retrievedUser.email).toBe("");
 });
