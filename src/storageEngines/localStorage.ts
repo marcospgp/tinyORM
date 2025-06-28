@@ -38,12 +38,16 @@ export function localStorageEngine<T extends JsonValue>({
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
     /** Get all items. */
-    getAll: (): T[] => {
+    getAll: (): Record<string, T> => {
       const stored = getStored();
 
-      return Object.values(stored).map((x) =>
-        migrate(x.object, x.modelVersion)
-      );
+      const result: Record<string, T> = {};
+
+      Object.entries(stored).forEach(([id, { modelVersion, object }]) => {
+        result[id] = migrate(object, modelVersion);
+      });
+
+      return result;
     },
     /**
      * Get items by ID.

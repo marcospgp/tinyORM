@@ -39,7 +39,8 @@ You then create a model for that type:
 const userModel = createModel(
   "user", // The model's name
   (user: User) => user.username, // Showing how to get a unique ID
-  inMemoryStorageEngine // Specifying a storage engine
+  inMemoryStorageEngine, // Specifying a storage engine
+  (storageMethods) => ({ ...storageMethods }) // Exposing all storage methods
 );
 ```
 
@@ -117,7 +118,7 @@ createModel(
   "user",
   (user: User) => user.username,
   inMemoryStorageEngine,
-  undefined,
+  (storageMethods) => ({ ...storageMethods }),
   [
     (prev: UserV1): UserV2 => {
       // Remove email field.

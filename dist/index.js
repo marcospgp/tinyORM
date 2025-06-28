@@ -55,7 +55,11 @@ function localStorageEngine({
     },
     getAll: () => {
       const stored = getStored();
-      return Object.values(stored).map((x) => migrate(x.object, x.modelVersion));
+      const result = {};
+      Object.entries(stored).forEach(([id, { modelVersion, object }]) => {
+        result[id] = migrate(object, modelVersion);
+      });
+      return result;
     },
     get: (...ids) => {
       const stored = getStored();
