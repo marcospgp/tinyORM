@@ -1,6 +1,7 @@
 import { type JsonValue, type StorageEngineParams } from "../tinyORM";
 export declare function localStorageEngine<T extends JsonValue>({ modelName, currentVersion, getId, migrate, }: StorageEngineParams<T>): {
     save: (...objs: T[]) => void;
+    delete: (...ids: string[]) => void;
     /** Get all items. */
     getAll: () => Record<string, T>;
     /**

@@ -1,7 +1,6 @@
 import { type JsonValue, type StorageEngineParams } from "../tinyORM";
 
 export function inMemoryStorageEngine<T extends JsonValue>({
-  modelName,
   currentVersion,
   getId,
   migrate,
@@ -9,13 +8,25 @@ export function inMemoryStorageEngine<T extends JsonValue>({
   const storage: Record<
     string,
     {
-      modelName: string;
       modelVersion: number;
       object: JsonValue;
     }
   > = {};
 
   return {
+    save: (...objs: T[]) => {
+      objs.forEach((x) => {
+        storage[getId(x)] = {
+          modelVersion: currentVersion,
+          object: x,
+        };
+      });
+    },
+    delete: (...ids: string[]) => {
+      ids.forEach((id) => {
+        delete storage[id];
+      });
+    },
     get: (id: string) => {
       const obj = storage[id];
 
@@ -24,15 +35,6 @@ export function inMemoryStorageEngine<T extends JsonValue>({
       }
 
       return migrate(obj.object, obj.modelVersion);
-    },
-    save: (...objs: T[]) => {
-      objs.forEach((x) => {
-        storage[getId(x)] = {
-          modelName,
-          modelVersion: currentVersion,
-          object: x,
-        };
-      });
     },
   };
 }

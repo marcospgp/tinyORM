@@ -53,6 +53,11 @@ function localStorageEngine({
       });
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
+    delete: (...ids) => {
+      const stored = getStored();
+      const filtered = Object.fromEntries(Object.entries(stored).filter(([id]) => !ids.includes(id)));
+      localStorage.setItem(modelName, JSON.stringify(filtered));
+    },
     getAll: () => {
       const stored = getStored();
       const result = {};
@@ -84,28 +89,31 @@ function localStorageEngine({
 }
 // src/storageEngines/inMemory.ts
 function inMemoryStorageEngine({
-  modelName,
   currentVersion,
   getId,
   migrate
 }) {
   const storage = {};
   return {
+    save: (...objs) => {
+      objs.forEach((x) => {
+        storage[getId(x)] = {
+          modelVersion: currentVersion,
+          object: x
+        };
+      });
+    },
+    delete: (...ids) => {
+      ids.forEach((id) => {
+        delete storage[id];
+      });
+    },
     get: (id) => {
       const obj = storage[id];
       if (!obj) {
         throw new Error(`Item with ID "${id}" not found.`);
       }
       return migrate(obj.object, obj.modelVersion);
-    },
-    save: (...objs) => {
-      objs.forEach((x) => {
-        storage[getId(x)] = {
-          modelName,
-          modelVersion: currentVersion,
-          object: x
-        };
-      });
     }
   };
 }

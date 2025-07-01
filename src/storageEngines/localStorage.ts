@@ -37,6 +37,15 @@ export function localStorageEngine<T extends JsonValue>({
 
       localStorage.setItem(modelName, JSON.stringify(stored));
     },
+    delete: (...ids: string[]) => {
+      const stored = getStored();
+
+      const filtered = Object.fromEntries(
+        Object.entries(stored).filter(([id]) => !ids.includes(id))
+      );
+
+      localStorage.setItem(modelName, JSON.stringify(filtered));
+    },
     /** Get all items. */
     getAll: (): Record<string, T> => {
       const stored = getStored();
