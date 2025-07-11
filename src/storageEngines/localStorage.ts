@@ -1,5 +1,6 @@
 import { type JsonValue, type StorageEngineParams } from "../tinyORM";
 
+/** Like array's map but preserves tuple typing.  */
 function tupleMap<Tuple extends readonly unknown[], Result>(
   tuple: Tuple,
   map: (item: Tuple[number]) => Result

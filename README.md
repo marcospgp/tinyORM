@@ -136,6 +136,8 @@ The storage engine stores the version alongside the data, and uses this informat
 
 The type annotations will help catch most mistakes, but it's still possible to write a buggy migration - just like it's possible to introduce a bug in any other part of your codebase. Proper error reporting in production will help you be aware of any problems your users may run into.
 
+One important thing to watch out for is to ensure your migrations are always deterministic, as your application may retrieve the same object twice before storing it again. An alternative would be to make your storage engine store any outdated objects right after migrating them, and before returning them, but this is not ideal - it will make your reads slower, and is prone to concurrency issues when fetching the same outdated data from more than one part of your application asynchronously.
+
 ## Storage engines
 
 TinyORM is maximally flexible and acts as a simple foundation that you can build upon. In line with this, it does not enforce a fixed storage API for storage engines.

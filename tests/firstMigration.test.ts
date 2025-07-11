@@ -49,4 +49,9 @@ test("Writing the first migration.", () => {
   // migrations you've passed in, and stores that version alongside each object.
   // It then uses that information to apply the correct migrations when
   // retrieving that data.
+
+  // Make sure to always keep your migrations deterministic! Even if your
+  // storage engine re-stores outdated objects right after migrating them (which
+  // would slow down your reads), your app would still be prone to concurrency
+  // issues with multiple simultaneous fetches for the same outdated data.
 });
