@@ -1,7 +1,7 @@
 {
   "name": "@marcospgp/tiny-orm",
   "description": "A minimal storage layer radically optimized toward development speed.",
-  "version": "0.3.2",
+  "version": "0.3.5",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marcospgp/tinyORM.git"
@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "bun run build:noTest && bun test || rm -rf ./dist",
-    "build:noTest": "rm -rf ./dist && bun build src/index.ts --outdir dist && bun run build:types",
+    "build:noTest": "rm -rf ./dist && bun build src/index.ts --outdir dist --external react && bun run build:types",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json --outdir dist",
     "prepublishOnly": "bun run build",
     "test": "bun test"
