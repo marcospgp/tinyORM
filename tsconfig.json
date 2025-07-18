@@ -3,8 +3,7 @@
   "extends": "@tsconfig/strictest",
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": ["ES2020"],
-
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",

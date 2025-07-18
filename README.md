@@ -170,6 +170,54 @@ There are several benefits to keeping your finer data processing logic on the cl
 - All of your data processing logic is plain typescript
 - Processing happens on the user's device (less demand for server compute)
 
+## Using with React
+
+TinyORM includes a `useStoredObjects` hook factory that makes it easy to create a hook for your models to be used in React components.
+
+Simply call it passing in CRUD methods from your model:
+
+```typescript
+export const useProjects = createStoredObjectsHook(modelName, {
+  getId,
+  create: someModel.create,
+  getAll: someModel.getAll,
+  get: someModel.get,
+  update: someModel.persist,
+  delete: someModel.delete,
+});
+```
+
+You can also pass it an optional max cache age.
+
+You can then use it like so:
+
+```typescript
+const somethings = useSomething();
+```
+
+Or in more interesting ways, like filtering all objects to retrieve only a subset:
+
+```typescript
+const somethings = useSomething(
+  (thing: Something) => isThisIt(thing),
+);
+```
+
+Or passing in a list of object IDs:
+
+```typescript
+const somethings = useSomething([id1, id2, id3]);
+```
+
+This hook:
+
+- triggers a rerender when an object your component has received is updated by any other component
+- keeps a cache keyed by object ID, so redundant fetches are avoided
+- refetches stale objects on rerender
+- handles concurrency out of the box, avoiding multiple fetches caused by simultaneous requests for the same objects
+
+See the annotation comment in the [hook factory's source]((./src/useStoredObjects.ts)) for more info.
+
 ## Maintainers
 
 This project uses [bun](https://bun.sh) for dependency management and its build system.

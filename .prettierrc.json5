@@ -1,0 +1,12 @@
+{
+  plugins: ["@trivago/prettier-plugin-sort-imports"],
+
+  // Config for "@trivago/prettier-plugin-sort-imports".
+  importOrder: ["^[./]"],
+  importOrderSeparation: false,
+  importOrderSortSpecifiers: true,
+
+  // Prettier doesn't wrap comments, but we try to keep them to the same width
+  // as code.
+  printWidth: 100,
+}
