@@ -58,7 +58,7 @@ const user: User = {
 And rely on the model to store and retrieve data. It simply exposes the methods provided by the storage engine:
 
 ```typescript
-userModel.save(user);
+await userModel.save(user);
 
 const retrievedUser = userModel.get("hunter2");
 console.log(retrievedUser.email); // Logs "hunter2@example.com"
