@@ -88,7 +88,7 @@ You're expected to pick a single database, write migrations it understands, and 
 
 With TinyORM, your migrations are just typescript code that lives alongside your app. The main differentiating factor, however, is that they are applied at data retrieval time. This has many benefits:
 
-- Because you don't have to run migration on your databases, you can store data anywhere - even on your users' devices.
+- Because you don't have to run migrations on your databases, you can store data anywhere - even on your users' devices.
 - Because you don't have to maintain database-specific migrations, you can combine more than one storage medium - such as storing data in `localStorage` for logged out users and in a cloud database for logged in users.
 - You don't have to sync your app's state with database state. There is no time-sensitive logic to run when deploying a new version of your app, and nothing goes wrong for a user that isn't running on the latest version.
 
