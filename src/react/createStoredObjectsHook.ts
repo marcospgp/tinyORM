@@ -24,11 +24,8 @@ const defaultCacheMaxAgeSeconds = process.env.NODE_ENV === "development" ? 30 : 
  * - a list of object IDs (this avoids fetching all objects)
  * - TODO: limit fetch range by dates.
  *
- * Returned objects are initially null to signal a loading state.
- *
  * The single object version is the same except you can only pass in a single ID
- * or a filter function. Because null signals a loading state, it returns an
- * additional notFound flag.
+ * or a filter function.
  *
  * Objects are cached in the following way:
  *
@@ -67,7 +64,8 @@ export function createStoredObjectsHook<
   const pubsub = new PubSub<T>(cachedStore);
 
   type StoredObjects = {
-    objs: Record<string, T> | null;
+    objs: Record<string, T>;
+    isLoading: boolean;
     update: (...args: U) => Promise<void>;
     create: (...args: C) => Promise<void>;
     delete: (...objs: T[]) => Promise<void>;
@@ -78,25 +76,31 @@ export function createStoredObjectsHook<
   function useStoredObjects(ids: string[]): StoredObjects;
 
   function useStoredObjects(filterOrIds?: string[] | ((obj: T) => boolean)): StoredObjects {
-    const [objects, setObjects] = useState<Record<string, T> | null>(null);
+    const [objects, setObjects] = useState<Record<string, T>>({});
+    const [isLoading, setIsLoading] = useState(false);
 
     const filter = typeof filterOrIds === "function" ? filterOrIds : null;
     const objectIds = Array.isArray(filterOrIds) ? filterOrIds : null;
 
+    const listener = (objs: Record<string, T> | null) => {
+      setObjects(objs ?? {});
+      setIsLoading(objs === null);
+    };
+
     useEffect(
       () => {
         if (objectIds) {
-          pubsub.sub(setObjects, objectIds);
+          pubsub.sub(listener, objectIds);
         } else if (filter) {
-          pubsub.subAll(setObjects, filter);
+          pubsub.subAll(listener, filter);
         } else {
-          pubsub.subAll(setObjects);
+          pubsub.subAll(listener);
         }
 
-        void pubsub.pub([setObjects]);
+        void pubsub.pub([listener]);
 
         return () => {
-          pubsub.unsub(setObjects);
+          pubsub.unsub(listener);
         };
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,6 +146,7 @@ export function createStoredObjectsHook<
 
     return {
       objs: objects,
+      isLoading,
       update: updateWrapper,
       create: createWrapper,
       delete: deleteWrapper,
@@ -153,7 +158,7 @@ export function createStoredObjectsHook<
   type StoredObject = {
     obj: T | null;
     id: string | null;
-    notFound: boolean;
+    isLoading: boolean;
     update: (...args: U) => Promise<void>;
     create: (...args: C) => Promise<void>;
     delete: (...objs: T[]) => Promise<void>;
@@ -171,23 +176,19 @@ export function createStoredObjectsHook<
       data = useStoredObjects(filterOrId);
     }
 
+    const entry = Object.entries(data.objs)[0];
 
-    let [id, obj]: [string | null, T | null] = [null, null];
-    let notFound = false;
+    const [id, obj] = entry ? entry : [null, null];
 
-    if (data.objs !== null) {
-      const entry = Object.entries(data.objs)[0];
-
-      if (!entry) {
-        notFound = true;
-      } else {
-        [id, obj] = entry;
-      }
-    }
-
-    return {obj, id, notFound, update: data.update, create: data.create, delete: data.delete};
+    return {
+      obj,
+      id,
+      isLoading: data.isLoading,
+      update: data.update,
+      create: data.create,
+      delete: data.delete,
+    };
   }
-
 
   return [useStoredObject, useStoredObjects] as const;
 }

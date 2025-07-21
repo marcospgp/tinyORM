@@ -124,20 +124,25 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
   const cachedStore = new CachedStore(uniqueId, cacheMaxAgeSeconds, storageFunctions.get, storageFunctions.getAll);
   const pubsub = new PubSub(cachedStore);
   function useStoredObjects(filterOrIds) {
-    const [objects, setObjects] = useState(null);
+    const [objects, setObjects] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
     const filter = typeof filterOrIds === "function" ? filterOrIds : null;
     const objectIds = Array.isArray(filterOrIds) ? filterOrIds : null;
+    const listener = (objs) => {
+      setObjects(objs ?? {});
+      setIsLoading(objs === null);
+    };
     useEffect(() => {
       if (objectIds) {
-        pubsub.sub(setObjects, objectIds);
+        pubsub.sub(listener, objectIds);
       } else if (filter) {
-        pubsub.subAll(setObjects, filter);
+        pubsub.subAll(listener, filter);
       } else {
-        pubsub.subAll(setObjects);
+        pubsub.subAll(listener);
       }
-      pubsub.pub([setObjects]);
+      pubsub.pub([listener]);
       return () => {
-        pubsub.unsub(setObjects);
+        pubsub.unsub(listener);
       };
     }, [objectIds?.join(",") ?? ""]);
     const updateWrapper = useCallback(async (...args) => {
@@ -160,6 +165,7 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
     }, []);
     return {
       objs: objects,
+      isLoading,
       update: updateWrapper,
       create: createWrapper,
       delete: deleteWrapper
@@ -172,17 +178,16 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
     } else {
       data = useStoredObjects(filterOrId);
     }
-    let [id, obj] = [null, null];
-    let notFound = false;
-    if (data.objs !== null) {
-      const entry = Object.entries(data.objs)[0];
-      if (!entry) {
-        notFound = true;
-      } else {
-        [id, obj] = entry;
-      }
-    }
-    return { obj, id, notFound, update: data.update, create: data.create, delete: data.delete };
+    const entry = Object.entries(data.objs)[0];
+    const [id, obj] = entry ? entry : [null, null];
+    return {
+      obj,
+      id,
+      isLoading: data.isLoading,
+      update: data.update,
+      create: data.create,
+      delete: data.delete
+    };
   }
   return [useStoredObject, useStoredObjects];
 }
