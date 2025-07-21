@@ -82,42 +82,35 @@ export function createStoredObjectsHook<
   function useStoredObjects(ids: string[]): StoredObjects;
 
   function useStoredObjects(idsOrFilter?: string | string[] | ((obj: T) => boolean)) {
-    // Group state to avoid multiple rerenders when updating it.
-    const [{ objects, isLoading }, setState] = useState<{
-      objects: Record<string, T>;
-      isLoading: boolean;
-    }>({ objects: {}, isLoading: false });
+    const [objects, setObjects] = useState<Record<string, T>>({});
+    const [isLoading, setIsLoading] = useState(true);
 
     const filter = typeof idsOrFilter === "function" ? idsOrFilter : null;
     const ids = Array.isArray(idsOrFilter) ? idsOrFilter : null;
     const id = typeof idsOrFilter === "string" ? idsOrFilter : null;
 
     const listener = (objs: Record<string, T> | null) => {
-      setState({
-        objects: objs ?? {},
-        isLoading: objs === null,
-      });
+      setObjects(objs ?? {});
+      setIsLoading(objs === null);
     };
 
-    useEffect(
-      () => {
-        if (ids) {
-          pubsub.sub(listener, ids);
-        } else if (filter) {
-          pubsub.subAll(listener, filter);
-        } else {
-          pubsub.subAll(listener);
-        }
+    useEffect(() => {
+      if (id) {
+        pubsub.sub(listener, [id]);
+      } else if (ids) {
+        pubsub.sub(listener, ids);
+      } else if (filter) {
+        pubsub.subAll(listener, filter);
+      } else {
+        pubsub.subAll(listener);
+      }
 
-        void pubsub.pub([listener]);
+      void pubsub.pub([listener]);
 
-        return () => {
-          pubsub.unsub(listener);
-        };
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [ids?.join(",") ?? ""],
-    );
+      return () => {
+        pubsub.unsub(listener);
+      };
+    }, [id, ids?.join(",")]);
 
     /**
      * Each wrapper should:
@@ -207,11 +200,6 @@ class PubSub<T> {
   constructor(private store: CachedStore<T>) {}
 
   async pub(subs: Sub<T>[]): Promise<void> {
-    // Publish null to subs before fetching to signal loading state.
-    subs.forEach((sub) => {
-      sub(null);
-    });
-
     const [ids, anySubbedAll] = this.getIds(subs);
 
     let objs: Record<string, T>;
