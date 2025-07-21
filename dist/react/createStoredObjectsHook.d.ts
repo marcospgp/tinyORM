@@ -47,7 +47,24 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
     delete: (...ids: string[]) => Promise<void>;
 }, { cacheMaxAgeSeconds }?: {
     cacheMaxAgeSeconds?: number;
-}): ({
+}): readonly [{
+    (filter: (obj: T) => boolean): {
+        obj: T | null;
+        id: string | null;
+        notFound: boolean;
+        update: (...args: U) => Promise<void>;
+        create: (...args: C) => Promise<void>;
+        delete: (...objs: T[]) => Promise<void>;
+    };
+    (id: string): {
+        obj: T | null;
+        id: string | null;
+        notFound: boolean;
+        update: (...args: U) => Promise<void>;
+        create: (...args: C) => Promise<void>;
+        delete: (...objs: T[]) => Promise<void>;
+    };
+}, {
     (): {
         objs: Record<string, T> | null;
         update: (...args: U) => Promise<void>;
@@ -66,21 +83,4 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
         create: (...args: C) => Promise<void>;
         delete: (...objs: T[]) => Promise<void>;
     };
-} | {
-    (filter: (obj: T) => boolean): {
-        obj: T | null;
-        id: string | null;
-        notFound: boolean;
-        update: (...args: U) => Promise<void>;
-        create: (...args: C) => Promise<void>;
-        delete: (...objs: T[]) => Promise<void>;
-    };
-    (id: string): {
-        obj: T | null;
-        id: string | null;
-        notFound: boolean;
-        update: (...args: U) => Promise<void>;
-        create: (...args: C) => Promise<void>;
-        delete: (...objs: T[]) => Promise<void>;
-    };
-})[];
+}];

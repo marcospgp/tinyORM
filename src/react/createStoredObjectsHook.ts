@@ -189,7 +189,7 @@ export function createStoredObjectsHook<
   }
 
 
-  return [useStoredObject, useStoredObjects];
+  return [useStoredObject, useStoredObjects] as const;
 }
 
 type Sub<T> = (objs: Record<string, T> | null) => void;
