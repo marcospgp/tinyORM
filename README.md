@@ -188,7 +188,7 @@ export const useUsers = createStoredObjectsHook(userModel, {
 });
 ```
 
-You can then use the resulting hooks like so:
+You can then use the resulting hook like so:
 
 ```typescript
 const user = useUsers(userId);
@@ -209,21 +209,21 @@ const users = useUsers([id1, id2, id3]);
 You can also override the default max cache age when calling the hook factory:
 
 ```typescript
-export const [useUser, useUsers] = createStoredObjectsHook(userModel, {
+export const useUsers = createStoredObjectsHook(userModel, {
   getId, create, get, getAll, update, delete
 }, {
   cacheMaxAgeSeconds: 5 * 60
 });
 ```
 
-This hook:
+The resulting hook:
 
 - triggers a rerender when an object your component has received is updated by any other component
 - keeps a cache keyed by object ID, so redundant fetches are avoided
 - refetches stale objects on rerender
 - handles concurrency out of the box, avoiding multiple fetches caused by simultaneous requests for the same objects
 
-See the annotation comment in the [hook factory's source](<(./src/useStoredObjects.ts)>) for more info.
+See the annotation comment in the [hook factory's source](./src/react/createStoredObjectsHook.ts) for more info.
 
 ## Maintainers
 
