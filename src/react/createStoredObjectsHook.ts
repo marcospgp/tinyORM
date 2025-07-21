@@ -82,16 +82,21 @@ export function createStoredObjectsHook<
   function useStoredObjects(ids: string[]): StoredObjects;
 
   function useStoredObjects(idsOrFilter?: string | string[] | ((obj: T) => boolean)) {
-    const [objects, setObjects] = useState<Record<string, T>>({});
-    const [isLoading, setIsLoading] = useState(false);
+    // Group state to avoid multiple rerenders when updating it.
+    const [{ objects, isLoading }, setState] = useState<{
+      objects: Record<string, T>;
+      isLoading: boolean;
+    }>({ objects: {}, isLoading: false });
 
     const filter = typeof idsOrFilter === "function" ? idsOrFilter : null;
     const ids = Array.isArray(idsOrFilter) ? idsOrFilter : null;
     const id = typeof idsOrFilter === "string" ? idsOrFilter : null;
 
     const listener = (objs: Record<string, T> | null) => {
-      setObjects(objs ?? {});
-      setIsLoading(objs === null);
+      setState({
+        objects: objs ?? {},
+        isLoading: objs === null,
+      });
     };
 
     useEffect(
@@ -151,6 +156,7 @@ export function createStoredObjectsHook<
       await pubsub.pubDeletion(objs.map((obj) => [storageFunctions.getId(obj), obj]));
     }, []);
 
+    // Multiple objects
     if (!id) {
       return {
         objs: objects,
@@ -161,10 +167,9 @@ export function createStoredObjectsHook<
       } as StoredObjects;
     }
 
-    const obj = Object.values(objects)[0] ?? null;
-
+    // Single object
     return {
-      obj,
+      obj: Object.values(objects)[0] ?? null,
       id,
       isLoading,
       update: updateWrapper,

@@ -124,14 +124,15 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
   const cachedStore = new CachedStore(uniqueId, cacheMaxAgeSeconds, storageFunctions.get, storageFunctions.getAll);
   const pubsub = new PubSub(cachedStore);
   function useStoredObjects(idsOrFilter) {
-    const [objects, setObjects] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
+    const [{ objects, isLoading }, setState] = useState({ objects: {}, isLoading: false });
     const filter = typeof idsOrFilter === "function" ? idsOrFilter : null;
     const ids = Array.isArray(idsOrFilter) ? idsOrFilter : null;
     const id = typeof idsOrFilter === "string" ? idsOrFilter : null;
     const listener = (objs) => {
-      setObjects(objs ?? {});
-      setIsLoading(objs === null);
+      setState({
+        objects: objs ?? {},
+        isLoading: objs === null
+      });
     };
     useEffect(() => {
       if (ids) {
@@ -159,10 +160,10 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
       await pubsub.pubObjs([[id2, newObj]]);
     }, []);
     const deleteWrapper = useCallback(async (...objs) => {
-      const ids2 = objs.map((obj2) => storageFunctions.getId(obj2));
+      const ids2 = objs.map((obj) => storageFunctions.getId(obj));
       await storageFunctions.delete(...ids2);
       cachedStore.delete(...ids2);
-      await pubsub.pubDeletion(objs.map((obj2) => [storageFunctions.getId(obj2), obj2]));
+      await pubsub.pubDeletion(objs.map((obj) => [storageFunctions.getId(obj), obj]));
     }, []);
     if (!id) {
       return {
@@ -173,9 +174,8 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
         delete: deleteWrapper
       };
     }
-    const obj = Object.values(objects)[0] ?? null;
     return {
-      obj,
+      obj: Object.values(objects)[0] ?? null,
       id,
       isLoading,
       update: updateWrapper,
