@@ -1,6 +1,6 @@
 /**
  * Hook factory to create hooks for storage models.
- * The resulting hook allows components to use stored objects in their state.
+ * The resulting hooks allow components to use stored objects in their state.
  *
  * Feel free to copy and paste the following documentation comment into the
  * resulting hook function:
@@ -21,6 +21,10 @@
  * - TODO: limit fetch range by dates.
  *
  * Returned objects are initially null to signal a loading state.
+ *
+ * The single object version is the same except you can only pass in a single ID
+ * or a filter function. Because null signals a loading state, it returns an
+ * additional notFound flag.
  *
  * Objects are cached in the following way:
  *
@@ -43,7 +47,7 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
     delete: (...ids: string[]) => Promise<void>;
 }, { cacheMaxAgeSeconds }?: {
     cacheMaxAgeSeconds?: number;
-}): {
+}): ({
     (): {
         objs: Record<string, T> | null;
         update: (...args: U) => Promise<void>;
@@ -56,10 +60,27 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
         create: (...args: C) => Promise<void>;
         delete: (...objs: T[]) => Promise<void>;
     };
-    (objectIds: string[]): {
+    (ids: string[]): {
         objs: Record<string, T> | null;
         update: (...args: U) => Promise<void>;
         create: (...args: C) => Promise<void>;
         delete: (...objs: T[]) => Promise<void>;
     };
-};
+} | {
+    (filter: (obj: T) => boolean): {
+        obj: T | null;
+        id: string | null;
+        notFound: boolean;
+        update: (...args: U) => Promise<void>;
+        create: (...args: C) => Promise<void>;
+        delete: (...objs: T[]) => Promise<void>;
+    };
+    (id: string): {
+        obj: T | null;
+        id: string | null;
+        notFound: boolean;
+        update: (...args: U) => Promise<void>;
+        create: (...args: C) => Promise<void>;
+        delete: (...objs: T[]) => Promise<void>;
+    };
+})[];

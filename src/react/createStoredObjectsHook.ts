@@ -4,7 +4,7 @@ const defaultCacheMaxAgeSeconds = process.env.NODE_ENV === "development" ? 30 : 
 
 /**
  * Hook factory to create hooks for storage models.
- * The resulting hook allows components to use stored objects in their state.
+ * The resulting hooks allow components to use stored objects in their state.
  *
  * Feel free to copy and paste the following documentation comment into the
  * resulting hook function:
@@ -25,6 +25,10 @@ const defaultCacheMaxAgeSeconds = process.env.NODE_ENV === "development" ? 30 : 
  * - TODO: limit fetch range by dates.
  *
  * Returned objects are initially null to signal a loading state.
+ *
+ * The single object version is the same except you can only pass in a single ID
+ * or a filter function. Because null signals a loading state, it returns an
+ * additional notFound flag.
  *
  * Objects are cached in the following way:
  *
@@ -71,13 +75,13 @@ export function createStoredObjectsHook<
 
   function useStoredObjects(): StoredObjects;
   function useStoredObjects(filter: (obj: T) => boolean): StoredObjects;
-  function useStoredObjects(objectIds: string[]): StoredObjects;
+  function useStoredObjects(ids: string[]): StoredObjects;
 
-  function useStoredObjects(filterOrObjectIds?: string[] | ((obj: T) => boolean)): StoredObjects {
+  function useStoredObjects(filterOrIds?: string[] | ((obj: T) => boolean)): StoredObjects {
     const [objects, setObjects] = useState<Record<string, T> | null>(null);
 
-    const filter = typeof filterOrObjectIds === "function" ? filterOrObjectIds : null;
-    const objectIds = Array.isArray(filterOrObjectIds) ? filterOrObjectIds : null;
+    const filter = typeof filterOrIds === "function" ? filterOrIds : null;
+    const objectIds = Array.isArray(filterOrIds) ? filterOrIds : null;
 
     useEffect(
       () => {
@@ -144,7 +148,48 @@ export function createStoredObjectsHook<
     };
   }
 
-  return useStoredObjects;
+  // Expose a secondary hook that returns a single object.
+
+  type StoredObject = {
+    obj: T | null;
+    id: string | null;
+    notFound: boolean;
+    update: (...args: U) => Promise<void>;
+    create: (...args: C) => Promise<void>;
+    delete: (...objs: T[]) => Promise<void>;
+  };
+
+  function useStoredObject(filter: (obj: T) => boolean): StoredObject;
+  function useStoredObject(id: string): StoredObject;
+
+  function useStoredObject(filterOrId: string | ((obj: T) => boolean)): StoredObject {
+    let data: StoredObjects;
+
+    if (typeof filterOrId === "string") {
+      data = useStoredObjects([filterOrId]);
+    } else {
+      data = useStoredObjects(filterOrId);
+    }
+
+
+    let [id, obj]: [string | null, T | null] = [null, null];
+    let notFound = false;
+
+    if (data.objs !== null) {
+      const entry = Object.entries(data.objs)[0];
+
+      if (!entry) {
+        notFound = true;
+      } else {
+        [id, obj] = entry;
+      }
+    }
+
+    return {obj, id, notFound, update: data.update, create: data.create, delete: data.delete};
+  }
+
+
+  return [useStoredObject, useStoredObjects];
 }
 
 type Sub<T> = (objs: Record<string, T> | null) => void;

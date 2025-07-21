@@ -117,16 +117,16 @@ function inMemoryStorageEngine({
     }
   };
 }
-// src/createStoredObjectsHook.ts
+// src/react/createStoredObjectsHook.ts
 import { useCallback, useEffect, useState } from "react";
 var defaultCacheMaxAgeSeconds = 30;
 function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSeconds = defaultCacheMaxAgeSeconds } = {}) {
   const cachedStore = new CachedStore(uniqueId, cacheMaxAgeSeconds, storageFunctions.get, storageFunctions.getAll);
   const pubsub = new PubSub(cachedStore);
-  function useStoredObjects(filterOrObjectIds) {
+  function useStoredObjects(filterOrIds) {
     const [objects, setObjects] = useState(null);
-    const filter = typeof filterOrObjectIds === "function" ? filterOrObjectIds : null;
-    const objectIds = Array.isArray(filterOrObjectIds) ? filterOrObjectIds : null;
+    const filter = typeof filterOrIds === "function" ? filterOrIds : null;
+    const objectIds = Array.isArray(filterOrIds) ? filterOrIds : null;
     useEffect(() => {
       if (objectIds) {
         pubsub.sub(setObjects, objectIds);
@@ -165,7 +165,26 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
       delete: deleteWrapper
     };
   }
-  return useStoredObjects;
+  function useStoredObject(filterOrId) {
+    let data;
+    if (typeof filterOrId === "string") {
+      data = useStoredObjects([filterOrId]);
+    } else {
+      data = useStoredObjects(filterOrId);
+    }
+    let [id, obj] = [null, null];
+    let notFound = false;
+    if (data.objs !== null) {
+      const entry = Object.entries(data.objs)[0];
+      if (!entry) {
+        notFound = true;
+      } else {
+        [id, obj] = entry;
+      }
+    }
+    return { obj, id, notFound, update: data.update, create: data.create, delete: data.delete };
+  }
+  return [useStoredObject, useStoredObjects];
 }
 
 class PubSub {

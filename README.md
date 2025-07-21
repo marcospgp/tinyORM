@@ -172,49 +172,60 @@ There are several benefits to keeping your finer data processing logic on the cl
 
 ## Using with React
 
-TinyORM includes a `useStoredObjects` hook factory that makes it easy to create a hook for your models to be used in React components.
+It is a common scenario in React to have multiple components relying on the same objects. Usually this requires lifting state to the closest common parent and exposing both the data itself and one or more callbacks through props or by creating a shared context.
 
-Simply call it passing in CRUD methods from your model:
+Both of these can make your code overly complex and cause unnecessary rerenders.
+
+TinyORM exposes a `useStoredObjects` hook factory that makes it easy to use your models in React components.
+
+You simply call it passing in CRUD methods for your model:
 
 ```typescript
-export const useProjects = createStoredObjectsHook(modelName, {
-  getId,
-  create: someModel.create,
-  getAll: someModel.getAll,
-  get: someModel.get,
-  update: someModel.persist,
-  delete: someModel.delete,
+const { getId, create, get, getAll, update, delete} = userModel;
+
+const [useUser, useUsers] = createStoredObjectsHook(userModel, {
+  getId, create, get, getAll, update, delete
 });
+
+export { useUser, useUsers };
 ```
 
-You can also pass it an optional max cache age.
-
-You can then use it like so:
+You can then use the resulting hooks like so:
 
 ```typescript
-const somethings = useSomething();
+const user = useUser(userId);
 ```
 
 Or in more interesting ways, like filtering all objects to retrieve only a subset:
 
 ```typescript
-const somethings = useSomething(
-  (thing: Something) => isThisIt(thing),
+const users = useUsers(
+  (user: User) => user.isAdmin,
 );
 ```
 
 Or passing in a list of object IDs:
 
 ```typescript
-const somethings = useSomething([id1, id2, id3]);
+const users = useUsers([id1, id2, id3]);
 ```
 
-This hook:
+You can also override the default max cache age when calling the hook factory:
 
-- triggers a rerender when an object your component has received is updated by any other component
-- keeps a cache keyed by object ID, so redundant fetches are avoided
-- refetches stale objects on rerender
-- handles concurrency out of the box, avoiding multiple fetches caused by simultaneous requests for the same objects
+```typescript
+export const [useUser, useUsers] = createStoredObjectsHook(userModel, {
+  getId, create, get, getAll, update, delete
+}, {
+  cacheMaxAgeSeconds: 5 * 60
+});
+```
+
+These hooks:
+
+- trigger a rerender when an object your component has received is updated by any other component
+- keep a cache keyed by object ID, so redundant fetches are avoided
+- refetch stale objects on rerender
+- handle concurrency out of the box, avoiding multiple fetches caused by simultaneous requests for the same objects
 
 See the annotation comment in the [hook factory's source]((./src/useStoredObjects.ts)) for more info.
 
