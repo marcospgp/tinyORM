@@ -24,9 +24,6 @@ const defaultCacheMaxAgeSeconds = process.env.NODE_ENV === "development" ? 30 : 
  * - a list of object IDs (this avoids fetching all objects)
  * - TODO: limit fetch range by dates.
  *
- * The single object version is the same except you can only pass in a single ID
- * or a filter function.
- *
  * Objects are cached in the following way:
  *
  * - Cache is global, with objects being shared between all components. No
@@ -63,24 +60,34 @@ export function createStoredObjectsHook<
   );
   const pubsub = new PubSub<T>(cachedStore);
 
-  type StoredObjects = {
-    objs: Record<string, T>;
+  type Common = {
     isLoading: boolean;
     update: (...args: U) => Promise<void>;
     create: (...args: C) => Promise<void>;
     delete: (...objs: T[]) => Promise<void>;
   };
 
+  type StoredObject = {
+    obj: T | null;
+    id: string | null;
+  } & Common;
+
+  type StoredObjects = {
+    objs: Record<string, T>;
+  } & Common;
+
   function useStoredObjects(): StoredObjects;
   function useStoredObjects(filter: (obj: T) => boolean): StoredObjects;
+  function useStoredObjects(id: string): StoredObject;
   function useStoredObjects(ids: string[]): StoredObjects;
 
-  function useStoredObjects(filterOrIds?: string[] | ((obj: T) => boolean)): StoredObjects {
+  function useStoredObjects(idsOrFilter?: string | string[] | ((obj: T) => boolean)) {
     const [objects, setObjects] = useState<Record<string, T>>({});
     const [isLoading, setIsLoading] = useState(false);
 
-    const filter = typeof filterOrIds === "function" ? filterOrIds : null;
-    const objectIds = Array.isArray(filterOrIds) ? filterOrIds : null;
+    const filter = typeof idsOrFilter === "function" ? idsOrFilter : null;
+    const ids = Array.isArray(idsOrFilter) ? idsOrFilter : null;
+    const id = typeof idsOrFilter === "string" ? idsOrFilter : null;
 
     const listener = (objs: Record<string, T> | null) => {
       setObjects(objs ?? {});
@@ -89,8 +96,8 @@ export function createStoredObjectsHook<
 
     useEffect(
       () => {
-        if (objectIds) {
-          pubsub.sub(listener, objectIds);
+        if (ids) {
+          pubsub.sub(listener, ids);
         } else if (filter) {
           pubsub.subAll(listener, filter);
         } else {
@@ -104,7 +111,7 @@ export function createStoredObjectsHook<
         };
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [objectIds?.join(",") ?? ""],
+      [ids?.join(",") ?? ""],
     );
 
     /**
@@ -144,53 +151,29 @@ export function createStoredObjectsHook<
       await pubsub.pubDeletion(objs.map((obj) => [storageFunctions.getId(obj), obj]));
     }, []);
 
-    return {
-      objs: objects,
-      isLoading,
-      update: updateWrapper,
-      create: createWrapper,
-      delete: deleteWrapper,
-    };
-  }
-
-  // Expose a secondary hook that returns a single object.
-
-  type StoredObject = {
-    obj: T | null;
-    id: string | null;
-    isLoading: boolean;
-    update: (...args: U) => Promise<void>;
-    create: (...args: C) => Promise<void>;
-    delete: (...objs: T[]) => Promise<void>;
-  };
-
-  function useStoredObject(filter: (obj: T) => boolean): StoredObject;
-  function useStoredObject(id: string): StoredObject;
-
-  function useStoredObject(filterOrId: string | ((obj: T) => boolean)): StoredObject {
-    let data: StoredObjects;
-
-    if (typeof filterOrId === "string") {
-      data = useStoredObjects([filterOrId]);
-    } else {
-      data = useStoredObjects(filterOrId);
+    if (!id) {
+      return {
+        objs: objects,
+        isLoading,
+        update: updateWrapper,
+        create: createWrapper,
+        delete: deleteWrapper,
+      } as StoredObjects;
     }
 
-    const entry = Object.entries(data.objs)[0];
-
-    const [id, obj] = entry ? entry : [null, null];
+    const obj = Object.values(objects)[0] ?? null;
 
     return {
       obj,
       id,
-      isLoading: data.isLoading,
-      update: data.update,
-      create: data.create,
-      delete: data.delete,
-    };
+      isLoading,
+      update: updateWrapper,
+      create: createWrapper,
+      delete: deleteWrapper,
+    } as StoredObject;
   }
 
-  return [useStoredObject, useStoredObjects] as const;
+  return useStoredObjects;
 }
 
 type Sub<T> = (objs: Record<string, T> | null) => void;

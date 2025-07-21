@@ -40,7 +40,7 @@ const userModel = createModel(
   "user", // The model's name
   (user: User) => user.username, // Showing how to get a unique ID
   inMemoryStorageEngine, // Specifying a storage engine
-  (storageMethods) => ({ ...storageMethods }) // Exposing all storage methods
+  (storageMethods) => ({ ...storageMethods }), // Exposing all storage methods
 );
 ```
 
@@ -126,7 +126,7 @@ createModel(
       // Add address field.
       return { ...rest, address: "unknown" };
     },
-  ]
+  ],
 );
 ```
 
@@ -183,25 +183,21 @@ You simply call it passing in CRUD methods for your model:
 ```typescript
 const { getId, create, get, getAll, update, delete} = userModel;
 
-const [useUser, useUsers] = createStoredObjectsHook(userModel, {
+export const useUsers = createStoredObjectsHook(userModel, {
   getId, create, get, getAll, update, delete
 });
-
-export { useUser, useUsers };
 ```
 
 You can then use the resulting hooks like so:
 
 ```typescript
-const user = useUser(userId);
+const user = useUsers(userId);
 ```
 
 Or in more interesting ways, like filtering all objects to retrieve only a subset:
 
 ```typescript
-const users = useUsers(
-  (user: User) => user.isAdmin,
-);
+const users = useUsers((user: User) => user.isAdmin);
 ```
 
 Or passing in a list of object IDs:
@@ -220,14 +216,14 @@ export const [useUser, useUsers] = createStoredObjectsHook(userModel, {
 });
 ```
 
-These hooks:
+This hook:
 
-- trigger a rerender when an object your component has received is updated by any other component
-- keep a cache keyed by object ID, so redundant fetches are avoided
-- refetch stale objects on rerender
-- handle concurrency out of the box, avoiding multiple fetches caused by simultaneous requests for the same objects
+- triggers a rerender when an object your component has received is updated by any other component
+- keeps a cache keyed by object ID, so redundant fetches are avoided
+- refetches stale objects on rerender
+- handles concurrency out of the box, avoiding multiple fetches caused by simultaneous requests for the same objects
 
-See the annotation comment in the [hook factory's source]((./src/useStoredObjects.ts)) for more info.
+See the annotation comment in the [hook factory's source](<(./src/useStoredObjects.ts)>) for more info.
 
 ## Maintainers
 

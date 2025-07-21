@@ -123,18 +123,19 @@ var defaultCacheMaxAgeSeconds = 30;
 function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSeconds = defaultCacheMaxAgeSeconds } = {}) {
   const cachedStore = new CachedStore(uniqueId, cacheMaxAgeSeconds, storageFunctions.get, storageFunctions.getAll);
   const pubsub = new PubSub(cachedStore);
-  function useStoredObjects(filterOrIds) {
+  function useStoredObjects(idsOrFilter) {
     const [objects, setObjects] = useState({});
     const [isLoading, setIsLoading] = useState(false);
-    const filter = typeof filterOrIds === "function" ? filterOrIds : null;
-    const objectIds = Array.isArray(filterOrIds) ? filterOrIds : null;
+    const filter = typeof idsOrFilter === "function" ? idsOrFilter : null;
+    const ids = Array.isArray(idsOrFilter) ? idsOrFilter : null;
+    const id = typeof idsOrFilter === "string" ? idsOrFilter : null;
     const listener = (objs) => {
       setObjects(objs ?? {});
       setIsLoading(objs === null);
     };
     useEffect(() => {
-      if (objectIds) {
-        pubsub.sub(listener, objectIds);
+      if (ids) {
+        pubsub.sub(listener, ids);
       } else if (filter) {
         pubsub.subAll(listener, filter);
       } else {
@@ -144,52 +145,45 @@ function createStoredObjectsHook(uniqueId, storageFunctions, { cacheMaxAgeSecond
       return () => {
         pubsub.unsub(listener);
       };
-    }, [objectIds?.join(",") ?? ""]);
+    }, [ids?.join(",") ?? ""]);
     const updateWrapper = useCallback(async (...args) => {
       const updated = await storageFunctions.update(...args);
-      const id = storageFunctions.getId(updated);
-      cachedStore.update({ [id]: updated }, Date.now());
-      await pubsub.pubObjs([[id, updated]]);
+      const id2 = storageFunctions.getId(updated);
+      cachedStore.update({ [id2]: updated }, Date.now());
+      await pubsub.pubObjs([[id2, updated]]);
     }, []);
     const createWrapper = useCallback(async (...args) => {
       const newObj = await storageFunctions.create(...args);
-      const id = storageFunctions.getId(newObj);
-      cachedStore.update({ [id]: newObj }, Date.now());
-      await pubsub.pubObjs([[id, newObj]]);
+      const id2 = storageFunctions.getId(newObj);
+      cachedStore.update({ [id2]: newObj }, Date.now());
+      await pubsub.pubObjs([[id2, newObj]]);
     }, []);
     const deleteWrapper = useCallback(async (...objs) => {
-      const ids = objs.map((obj) => storageFunctions.getId(obj));
-      await storageFunctions.delete(...ids);
-      cachedStore.delete(...ids);
-      await pubsub.pubDeletion(objs.map((obj) => [storageFunctions.getId(obj), obj]));
+      const ids2 = objs.map((obj2) => storageFunctions.getId(obj2));
+      await storageFunctions.delete(...ids2);
+      cachedStore.delete(...ids2);
+      await pubsub.pubDeletion(objs.map((obj2) => [storageFunctions.getId(obj2), obj2]));
     }, []);
+    if (!id) {
+      return {
+        objs: objects,
+        isLoading,
+        update: updateWrapper,
+        create: createWrapper,
+        delete: deleteWrapper
+      };
+    }
+    const obj = Object.values(objects)[0] ?? null;
     return {
-      objs: objects,
+      obj,
+      id,
       isLoading,
       update: updateWrapper,
       create: createWrapper,
       delete: deleteWrapper
     };
   }
-  function useStoredObject(filterOrId) {
-    let data;
-    if (typeof filterOrId === "string") {
-      data = useStoredObjects([filterOrId]);
-    } else {
-      data = useStoredObjects(filterOrId);
-    }
-    const entry = Object.entries(data.objs)[0];
-    const [id, obj] = entry ? entry : [null, null];
-    return {
-      obj,
-      id,
-      isLoading: data.isLoading,
-      update: data.update,
-      create: data.create,
-      delete: data.delete
-    };
-  }
-  return [useStoredObject, useStoredObjects];
+  return useStoredObjects;
 }
 
 class PubSub {

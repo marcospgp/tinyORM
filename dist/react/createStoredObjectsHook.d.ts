@@ -20,9 +20,6 @@
  * - a list of object IDs (this avoids fetching all objects)
  * - TODO: limit fetch range by dates.
  *
- * The single object version is the same except you can only pass in a single ID
- * or a filter function.
- *
  * Objects are cached in the following way:
  *
  * - Cache is global, with objects being shared between all components. No
@@ -44,10 +41,18 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
     delete: (...ids: string[]) => Promise<void>;
 }, { cacheMaxAgeSeconds }?: {
     cacheMaxAgeSeconds?: number;
-}): readonly [{
+}): {
+    (): {
+        objs: Record<string, T>;
+    } & {
+        isLoading: boolean;
+        update: (...args: U) => Promise<void>;
+        create: (...args: C) => Promise<void>;
+        delete: (...objs: T[]) => Promise<void>;
+    };
     (filter: (obj: T) => boolean): {
-        obj: T | null;
-        id: string | null;
+        objs: Record<string, T>;
+    } & {
         isLoading: boolean;
         update: (...args: U) => Promise<void>;
         create: (...args: C) => Promise<void>;
@@ -56,21 +61,7 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
     (id: string): {
         obj: T | null;
         id: string | null;
-        isLoading: boolean;
-        update: (...args: U) => Promise<void>;
-        create: (...args: C) => Promise<void>;
-        delete: (...objs: T[]) => Promise<void>;
-    };
-}, {
-    (): {
-        objs: Record<string, T>;
-        isLoading: boolean;
-        update: (...args: U) => Promise<void>;
-        create: (...args: C) => Promise<void>;
-        delete: (...objs: T[]) => Promise<void>;
-    };
-    (filter: (obj: T) => boolean): {
-        objs: Record<string, T>;
+    } & {
         isLoading: boolean;
         update: (...args: U) => Promise<void>;
         create: (...args: C) => Promise<void>;
@@ -78,9 +69,10 @@ export declare function createStoredObjectsHook<T extends Record<string, unknown
     };
     (ids: string[]): {
         objs: Record<string, T>;
+    } & {
         isLoading: boolean;
         update: (...args: U) => Promise<void>;
         create: (...args: C) => Promise<void>;
         delete: (...objs: T[]) => Promise<void>;
     };
-}];
+};
