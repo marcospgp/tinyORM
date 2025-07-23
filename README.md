@@ -66,6 +66,15 @@ console.log(retrievedUser.email); // Logs "hunter2@example.com"
 
 Because your data is exposed as plain objects, you can just use them with any libraries that expect this format. With React, for example, you can store them in state or pass them to your components as props.
 
+The main advantages of TinyORM over traditional ORMs are:
+
+- ⛓️‍💥 No database lock in: switch databases or integrate additional ones at any time simply by updating your storage engine. Your schema and migrations remain exactly the same.
+- 🔄 Integrate multiple databases: your storage engine can integrate any combination of databases, such as storing data locally for logged out users and on a cloud database for logged in users.
+- 💾 Store data on user owned mediums: because migrations are applied on data retrieval, you are not limited to databases you can run migrations on, and can store data on mediums owned by the user - such as the browser's `localStorage`, or even the local device's memory!
+- 🛠️ Everything is typescript: from defining your schema to its migrations and querying for data, everything happens in your app's codebase.
+- ✂️ Zero bloat: tinyORM has no dependencies and doesn't add anything to your code other than vanilla typescript. There are no APIs or decorators - it's mostly just leveraging the power of type inference.
+- ⚛️ React integration: tinyORM ships with a react hook factory that allows your components to plug directly into your data models and rerender whenever an object they rely on is updated somewhere in your app - all while avoiding redundant fetches and rerenders.
+
 For the fastest way to get started, check out the following examples:
 
 1. [Specifying your first type](./tests/firstType.test.ts)
